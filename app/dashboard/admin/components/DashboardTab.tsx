@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { FaUsers, FaArrowRight, FaUserTie, FaCalendarCheck, FaChevronRight } from "react-icons/fa";
+import { supabase } from '../../../../lib/supabase';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -10,6 +11,28 @@ interface DashboardTabProps {
 }
 
 export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
+    const [totalMhs, setTotalMhs] = useState<number>(0);
+    const [totalDosen, setTotalDosen] = useState<number>(0);
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            // Get total mahasiswa
+            const { count: mhsCount } = await supabase
+                .from('mahasiswa')
+                .select('*', { count: 'exact', head: true });
+            
+            // Get total dosen
+            const { count: dosenCount } = await supabase
+                .from('dosen')
+                .select('*', { count: 'exact', head: true });
+
+            if (mhsCount !== null) setTotalMhs(mhsCount);
+            if (dosenCount !== null) setTotalDosen(dosenCount);
+        };
+
+        fetchCounts();
+    }, []);
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -58,7 +81,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                         <FaUsers className="absolute -right-4 -bottom-4 text-9xl opacity-10 group-hover:scale-110 transition-transform" />
                         <div className="relative z-10">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200">Total Mahasiswa</p>
-                            <h3 className="text-6xl font-black mt-2">105</h3>
+                            <h3 className="text-6xl font-black mt-2">{totalMhs}</h3>
                         </div>
                         <div className="relative z-10 flex items-center gap-2 mt-8 text-[10px] font-bold bg-white/10 w-fit px-4 py-2 rounded-full backdrop-blur-md">
                             LIHAT DATA <FaArrowRight />
@@ -71,7 +94,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                                 <FaUserTie className="text-xl" />
                             </div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Dosen Pengajar</p>
-                            <h3 className="text-5xl font-black text-slate-800 mt-2">10</h3>
+                            <h3 className="text-5xl font-black text-slate-800 mt-2">{totalDosen}</h3>
                         </div>
                         <p className="text-indigo-600 text-xs font-bold mt-4 underline decoration-2 underline-offset-4">Monitor SKS & MK</p>
                     </div>

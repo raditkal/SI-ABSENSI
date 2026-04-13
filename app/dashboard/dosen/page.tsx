@@ -1,29 +1,67 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LectureMatrix from '../../components/LectureMatrix';
 import LiveSession from '../../components/LiveSession';
 import { FaArrowLeft, FaClock, FaCalendarDay } from "react-icons/fa";
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import CourseList, { Course } from './components/CourseList';
-
-const courses: Course[] = [
-    { id: 1, name: "Pemrograman Web II", class: "IF-22-A", room: "Lab 303", time: "10:30 - 13:00", day: "Senin", cap: 31 },
-    { id: 2, name: "Data Warehouse", class: "IF-22-B", room: "D1.3", time: "14:00 - 16:30", day: "Senin", cap: 31 },
-    { id: 3, name: "Cloud Computing", class: "IF-21-C", room: "D2.1", time: "08:00 - 10:30", day: "Selasa", cap: 31 }
-];
-
-const students = [
-    { nim: "9021282429041", nama: "M. RADITTYO KALIN" },
-    { nim: "9021182429005", nama: "PINDRA SONESA" },
-    // ... tambahkan sisa data mhsList kamu di sini
-];
+import { supabase } from '../../../lib/supabase';
 
 export default function DosenDashboard() {
     const [view, setView] = useState<'main' | 'live' | 'history'>('main');
     const [activeCourse, setActiveCourse] = useState<Course | null>(null);
     const [activeTab, setActiveTab] = useState<'today'|'all'|'upcoming'>('today');
     const [rescheduleCourse, setRescheduleCourse] = useState<Course | null>(null);
+
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [students, setStudents] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDosenData = async () => {
+            setIsLoading(true);
+            
+            // 1. Fetch Mahasiswa
+            const { data: mhsData } = await supabase
+                .from('mahasiswa')
+                .select('nim, nama_lengkap')
+                .order('nama_lengkap');
+            
+            if (mhsData) {
+                setStudents(mhsData.map(m => ({ nim: m.nim, nama: m.nama_lengkap })));
+            }
+
+            // 2. Fetch Jadwal (Dosen login saat ini belum dibatasi per dosen, ditampilkan semua jadwal mock)
+            const { data: jadwalData } = await supabase
+                .from('jadwal')
+                .select(`
+                    id,
+                    hari,
+                    jam_mulai,
+                    jam_selesai,
+                    ruangan,
+                    matakuliah(nama_mk)
+                `);
+
+            if (jadwalData) {
+                // Konversi data supabase ke format Course
+                const formattedCourses: Course[] = jadwalData.map(j => ({
+                    id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
+                    name: (j.matakuliah as any)?.nama_mk || 'Matkul',
+                    class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
+                    room: j.ruangan,
+                    time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
+                    day: j.hari,
+                    cap: 40 // Default capacity
+                }));
+                setCourses(formattedCourses);
+            }
+            setIsLoading(false);
+        };
+
+        fetchDosenData();
+    }, []);
 
     const handleHistoryClick = (course: Course) => {
         setActiveCourse(course);
@@ -36,17 +74,25 @@ export default function DosenDashboard() {
     };
 
     const filteredCourses = courses.filter(c => {
-        if (activeTab === 'today') return c.day === "Senin";
-        if (activeTab === 'upcoming') return c.day !== "Senin";
+        const hariAwal = ['Senin', 'Selasa']; // Mocking today
+        if (activeTab === 'today') return hariAwal.includes(c.day);
+        if (activeTab === 'upcoming') return !hariAwal.includes(c.day);
         return true;
     });
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#f0f4f9] flex flex-col items-center justify-center">
+                <i className="fas fa-circle-notch animate-spin text-4xl text-indigo-500 mb-4"></i>
+                <p className="text-sm font-bold text-slate-500 animate-pulse uppercase tracking-widest">Memuat Dashboard Dosen...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#f0f4f9] pb-12 font-sans overflow-x-hidden text-slate-900 relative">
-            {/* Background Accent */}
             <div className="fixed top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-600 to-purple-600 z-[200]"></div>
 
-            {/* Navbar remains visible across views based on user HTML */}
             <Navbar />
             
             {view === 'live' && (
@@ -98,16 +144,23 @@ export default function DosenDashboard() {
                         </button>
                     </div>
 
-                    <CourseList 
-                    courses={filteredCourses} 
-                    onHistoryClick={handleHistoryClick} 
-                    onLaunchClick={handleLaunchClick} 
-                    onDelayClick={(course) => setRescheduleCourse(course)}
-                    />
+                    {courses.length === 0 ? (
+                        <div className="bg-white rounded-[3rem] p-12 text-center shadow-sm">
+                            <span className="text-4xl">📚</span>
+                            <h3 className="mt-4 font-extrabold text-slate-800">BELUM ADA JADWAL</h3>
+                            <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto mt-2">Dosen ini belum memiliki rincian jadwal yang terdaftar pada database Supabase.</p>
+                        </div>
+                    ) : (
+                        <CourseList 
+                            courses={filteredCourses} 
+                            onHistoryClick={handleHistoryClick} 
+                            onLaunchClick={handleLaunchClick} 
+                            onDelayClick={(course) => setRescheduleCourse(course)}
+                        />
+                    )}
                 </main>
             )}
 
-            {/* Reschedule Modal */}
             {rescheduleCourse && (
                 <div className="fixed inset-0 bg-slate-900/40 z-[300] flex items-center justify-center p-4 backdrop-blur-md">
                     <div className="bg-white/90 backdrop-blur-xl w-full max-w-md rounded-[3rem] p-10 shadow-2xl border border-white">
