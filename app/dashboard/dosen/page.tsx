@@ -74,9 +74,11 @@ export default function DosenDashboard() {
     };
 
     const filteredCourses = courses.filter(c => {
-        const hariAwal = ['Senin', 'Selasa']; // Mocking today
-        if (activeTab === 'today') return hariAwal.includes(c.day);
-        if (activeTab === 'upcoming') return !hariAwal.includes(c.day);
+        const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const todayString = namaHari[new Date().getDay()]; // Mendapatkan hari sistem secara dinamis
+        
+        if (activeTab === 'today') return c.day === todayString;
+        if (activeTab === 'upcoming') return c.day !== todayString;
         return true;
     });
 

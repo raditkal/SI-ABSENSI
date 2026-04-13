@@ -9,7 +9,9 @@ export default function DashboardHeader() {
                 <h2 className="text-3xl font-extrabold tracking-tighter text-slate-800 mb-2">
                     Jadwal Perkuliahan <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Hari Ini</span>
                 </h2>
-                <p className="text-sm font-medium text-slate-500">Senin, 01 Februari 2026 • Semester Genap</p>
+                <p className="text-sm font-medium text-slate-500">
+                    {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })} • Semester Genap
+                </p>
             </div>
             <FaCalendarCheck className="text-9xl absolute -right-4 -bottom-4 opacity-5 text-indigo-600" />
         </div>
