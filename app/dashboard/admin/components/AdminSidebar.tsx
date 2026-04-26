@@ -47,6 +47,9 @@ export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebar
             <button onClick={() => setCurrentTab('matakuliah')} className={`w-full flex items-center gap-4 p-4 rounded-2xl font-bold text-sm transition-all ${currentTab === 'matakuliah' ? 'bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg text-white' : 'text-slate-400 hover:bg-white/5 hover:translate-x-1'}`}>
                 <FaCalendarDay className="text-lg" /> Mata Kuliah
             </button>
+            <button onClick={() => setCurrentTab('koreksi')} className={`w-full flex items-center gap-4 p-4 rounded-2xl font-bold text-sm transition-all ${currentTab === 'koreksi' ? 'bg-gradient-to-br from-rose-500 to-orange-500 shadow-lg text-white' : 'text-slate-400 hover:bg-white/5 hover:translate-x-1'}`}>
+                <FaFingerprint className="text-lg" /> Koreksi Data
+            </button>
             <button onClick={() => setCurrentTab('laporan')} className={`w-full flex items-center gap-4 p-4 rounded-2xl font-bold text-sm transition-all ${currentTab === 'laporan' ? 'bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg text-white' : 'text-slate-400 hover:bg-white/5 hover:translate-x-1'}`}>
                 <FaChartPie className="text-lg" /> Laporan
             </button>

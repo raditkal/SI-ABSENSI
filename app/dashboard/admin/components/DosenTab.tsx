@@ -109,21 +109,20 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                         <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-left">
                             <tr>
                                 <th className="p-6 rounded-l-2xl">Dosen</th>
-                                <th className="p-6">NIP</th>
-                                <th className="p-6 text-center rounded-r-2xl">Aksi</th>
+                                <th className="p-6 rounded-r-2xl">NIP</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={3} className="p-10 text-center text-slate-400 font-bold text-sm">
+                                    <td colSpan={2} className="p-10 text-center text-slate-400 font-bold text-sm">
                                         <i className="fas fa-circle-notch animate-spin text-2xl text-indigo-500 mb-3 block"></i>
                                         Memuat Data...
                                     </td>
                                 </tr>
                             ) : dosenList.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="p-10 text-center text-slate-400 font-bold text-sm">
+                                    <td colSpan={2} className="p-10 text-center text-slate-400 font-bold text-sm">
                                         Data dosen masih kosong di Supabase.
                                     </td>
                                 </tr>
@@ -142,11 +141,6 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                                         </td>
                                         <td className="p-6 font-bold text-slate-500 tracking-widest text-xs">
                                             {d.nip}
-                                        </td>
-                                        <td className="p-6 text-center">
-                                            <button className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-100 transition-colors">
-                                                Detail
-                                            </button>
                                         </td>
                                     </tr>
                                 ))

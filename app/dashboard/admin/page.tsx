@@ -7,6 +7,7 @@ import MahasiswaTab from './components/MahasiswaTab';
 import DosenTab from './components/DosenTab';
 import MataKuliahTab from './components/MataKuliahTab';
 import LaporanTab from './components/LaporanTab';
+import KoreksiTab from './components/KoreksiTab';
 
 export default function AdminDashboard() {
     const [currentTab, setCurrentTab] = useState('dashboard');
@@ -17,6 +18,7 @@ export default function AdminDashboard() {
         if (currentTab === 'dosen') return 'Direktori Dosen';
         if (currentTab === 'matakuliah') return 'Monitoring Jadwal';
         if (currentTab === 'laporan') return 'Laporan & Analitik';
+        if (currentTab === 'koreksi') return 'Koreksi Log Presensi';
         return 'Dashboard Utama';
     };
 
@@ -34,6 +36,7 @@ export default function AdminDashboard() {
                 {currentTab === 'dosen' && <DosenTab setCurrentTab={setCurrentTab} />}
                 {currentTab === 'matakuliah' && <MataKuliahTab setCurrentTab={setCurrentTab} />}
                 {currentTab === 'laporan' && <LaporanTab setCurrentTab={setCurrentTab} />}
+                {currentTab === 'koreksi' && <KoreksiTab setCurrentTab={setCurrentTab} />}
             </main>
         </div>
     );
