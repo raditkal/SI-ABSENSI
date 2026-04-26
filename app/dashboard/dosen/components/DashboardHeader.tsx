@@ -1,7 +1,11 @@
 import React from 'react';
 import { FaCalendarCheck } from "react-icons/fa";
 
-export default function DashboardHeader() {
+interface DashboardHeaderProps {
+  totalSKS: number;
+}
+
+export default function DashboardHeader({ totalSKS }: DashboardHeaderProps) {
   return (
     <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 glass rounded-[2.5rem] p-8 flex items-center justify-between overflow-hidden relative">
@@ -17,7 +21,7 @@ export default function DashboardHeader() {
         </div>
         <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white flex flex-col justify-center shadow-2xl shadow-indigo-200">
             <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Total SKS Hari Ini</p>
-            <p className="text-4xl font-extrabold">06 <span className="text-lg font-light opacity-50">SKS</span></p>
+            <p className="text-4xl font-extrabold">{totalSKS < 10 ? `0${totalSKS}` : totalSKS} <span className="text-lg font-light opacity-50">SKS</span></p>
         </div>
     </section>
   );

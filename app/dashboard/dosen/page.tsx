@@ -16,11 +16,14 @@ export default function DosenDashboard() {
 
     const [courses, setCourses] = useState<Course[]>([]);
     const [students, setStudents] = useState<any[]>([]);
+    const [dosenProfile, setDosenProfile] = useState<any>(null);
+    const [totalSKS, setTotalSKS] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchDosenData = async () => {
             setIsLoading(true);
+            
             // 1. Dapatkan Auth User saat ini
             const { data: { user }, error: userError } = await supabase.auth.getUser();
             
@@ -30,16 +33,18 @@ export default function DosenDashboard() {
             }
 
             // 2. Fetch Profil Dosen
-            const { data: dosen } = await supabase
+            const { data: dosen, error: dosenError } = await supabase
               .from('dosen')
               .select('id, nip, nama_lengkap')
               .eq('user_id', user.id)
               .single();
 
-            if (!dosen) {
+            if (dosenError || !dosen) {
+                console.error("Gagal fetch dosen:", dosenError);
                 setIsLoading(false);
                 return;
             }
+            setDosenProfile(dosen);
 
             // 3. Fetch Mahasiswa (semua)
             const { data: mhsData } = await supabase
@@ -60,22 +65,34 @@ export default function DosenDashboard() {
                     jam_mulai,
                     jam_selesai,
                     ruangan,
-                    matakuliah(nama_mk)
+                    matakuliah(nama_mk, sks)
                 `)
                 .eq('id_dosen', dosen.id);
 
             if (jadwalData) {
+                const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const todayString = namaHari[new Date().getDay()];
+                let currentSks = 0;
+
                 // Konversi data supabase ke format Course
-                const formattedCourses: Course[] = jadwalData.map(j => ({
-                    id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
-                    name: (j.matakuliah as any)?.nama_mk || 'Matkul',
-                    class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
-                    room: j.ruangan,
-                    time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
-                    day: j.hari,
-                    cap: 40 // Default capacity
-                }));
+                const formattedCourses: Course[] = jadwalData.map(j => {
+                    const sksValue = (j.matakuliah as any)?.sks || 0;
+                    if (j.hari === todayString) {
+                        currentSks += sksValue;
+                    }
+
+                    return {
+                        id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
+                        name: (j.matakuliah as any)?.nama_mk || 'Matkul',
+                        class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
+                        room: j.ruangan,
+                        time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
+                        day: j.hari,
+                        cap: 40 // Default capacity
+                    }
+                });
                 setCourses(formattedCourses);
+                setTotalSKS(currentSks);
             }
             setIsLoading(false);
         };
@@ -115,7 +132,7 @@ export default function DosenDashboard() {
         <div className="min-h-screen bg-[#f0f4f9] pb-12 font-sans overflow-x-hidden text-slate-900 relative">
             <div className="fixed top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-600 to-purple-600 z-[200]"></div>
 
-            <Navbar />
+            <Navbar dosenName={dosenProfile?.nama_lengkap} />
             
             {view === 'live' && (
                 <main className="p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -149,7 +166,7 @@ export default function DosenDashboard() {
 
             {view === 'main' && (
                 <main className="max-w-7xl mx-auto px-4 md:px-8 space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <DashboardHeader />
+                    <DashboardHeader totalSKS={totalSKS} />
                     
                     <div className="flex gap-8 border-b border-slate-200 px-2 overflow-x-auto custom-scroll">
                         <button onClick={() => setActiveTab('today')} className={`relative pb-4 font-extrabold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap transition-colors ${activeTab === 'today' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>

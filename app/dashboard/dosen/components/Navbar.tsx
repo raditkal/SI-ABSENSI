@@ -4,7 +4,11 @@ import { FaPowerOff } from "react-icons/fa6";
 import { supabase } from '../../../../lib/supabase';
 import { useRouter } from 'next/navigation';
 
-export default function Navbar() {
+interface NavbarProps {
+  dosenName?: string;
+}
+
+export default function Navbar({ dosenName = 'Dosen' }: NavbarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -27,11 +31,11 @@ export default function Navbar() {
             <div className="flex items-center gap-5">
                 <div className="text-right hidden sm:block">
                     <p className="text-[9px] font-black text-indigo-500 uppercase leading-none">Welcome back,</p>
-                    <p className="text-xs font-extrabold text-slate-700">Dosen</p>
+                    <p className="text-xs font-extrabold text-slate-700">{dosenName}</p>
                 </div>
                 <div className="relative group">
                     <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px] cursor-pointer">
-                        <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center font-bold text-indigo-600">D</div>
+                        <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center font-bold text-indigo-600">{dosenName.charAt(0).toUpperCase()}</div>
                     </div>
                 </div>
                 <button 

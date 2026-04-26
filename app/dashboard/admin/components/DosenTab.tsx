@@ -8,7 +8,7 @@ interface DosenTabProps {
 
 interface DosenData {
     id: string;
-    nidn: string;
+    nip: string;
     nama_lengkap: string;
     gelar: string;
 }
@@ -51,7 +51,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                         <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-left">
                             <tr>
                                 <th className="p-6 rounded-l-2xl">Dosen</th>
-                                <th className="p-6">NIDN</th>
+                                <th className="p-6">NIP</th>
                                 <th className="p-6 text-center rounded-r-2xl">Aksi</th>
                             </tr>
                         </thead>
@@ -83,7 +83,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                                             </div>
                                         </td>
                                         <td className="p-6 font-bold text-slate-500 tracking-widest text-xs">
-                                            {d.nidn}
+                                            {d.nip}
                                         </td>
                                         <td className="p-6 text-center">
                                             <button className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-100 transition-colors">
