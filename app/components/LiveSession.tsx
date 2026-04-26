@@ -31,10 +31,22 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
         // Tarik data saat pertama kali jalan
         fetchAttendance();
         
-        // Cek data mahasiswa baru setiap 2.5 detik (Polling)
-        const intervalId = setInterval(fetchAttendance, 2500);
+        // Menggunakan Supabase Realtime untuk mendapatkan update instan tanpa polling
+        const channel = supabase
+            .channel(`live-attendance-${course.id}`)
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'absensi', filter: `id_jadwal=eq.${course.id}` },
+                () => {
+                    // Ketika ada data absen baru, tarik ulang data terbaru untuk mendapatkan info mahasiswa (JOIN)
+                    fetchAttendance();
+                }
+            )
+            .subscribe();
 
-        return () => clearInterval(intervalId);
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [isPresenting, course]);
 
     return (

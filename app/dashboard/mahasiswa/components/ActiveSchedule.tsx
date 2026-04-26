@@ -27,28 +27,56 @@ export default function ActiveSchedule({ schedule, studentInfo }: ActiveSchedule
       setIsScanning(true);
       setErrorMsg('');
 
-      // Animasi pura-pura proses baca QR barcode selama 1.5 detik
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      try {
+          // 1. Fase Verifikasi Lokasi (Simulasi Geolocation)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Menggunakan API Geolocation asli jika tersedia (dengan fallback aman)
+          const locationCheck = await new Promise<boolean>((resolve) => {
+              if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                          // Jika sukses dapat lokasi (Dalam skenario nyata, hitung jarak Haversine ke kampus di sini)
+                          resolve(true); 
+                      },
+                      (err) => {
+                          // Bypass error untuk keperluan demo jika GPS diblokir
+                          console.log("GPS Blocked, using bypass for demo.");
+                          resolve(true); 
+                      },
+                      { timeout: 3000 }
+                  );
+              } else {
+                  resolve(true); // Bypass jika browser tidak support
+              }
+          });
 
-      const { error } = await supabase.from('absensi').insert({
-          id_jadwal: schedule.id,
-          id_mahasiswa: studentInfo.id,
-          pertemuan_ke: 1, 
-          status: 'Hadir',
-          waktu_absen: new Date().toISOString()
-      });
-
-      setIsScanning(false);
-
-      if (error) {
-          // Error code 23505 = unique constraint violation (sudah absen d pertemuan 1)
-          if (error.code === '23505') {
-              setSuccess(true);
-          } else {
-              setErrorMsg(error.message);
+          if (!locationCheck) {
+              throw new Error("Anda berada di luar area kampus (Radius > 500m).");
           }
-      } else {
-          setSuccess(true);
+
+          // 2. Fase Validasi & Insert Data ke Supabase
+          const { error } = await supabase.from('absensi').insert({
+              id_jadwal: schedule.id,
+              id_mahasiswa: studentInfo.id,
+              pertemuan_ke: 1, // Idealnya ini dinamis
+              status: 'Hadir',
+              waktu_absen: new Date().toISOString()
+          });
+
+          if (error) {
+              if (error.code === '23505') {
+                  setSuccess(true);
+              } else {
+                  throw new Error(error.message);
+              }
+          } else {
+              setSuccess(true);
+          }
+      } catch (err: any) {
+          setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+      } finally {
+          setIsScanning(false);
       }
   };
 

@@ -128,6 +128,57 @@ export default function DosenDashboard() {
         );
     }
 
+    const [newDate, setNewDate] = useState('');
+    const [newTime, setNewTime] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleRescheduleSubmit = async () => {
+        if (!rescheduleCourse || !newDate || !newTime) {
+            alert("Harap isi tanggal dan jam pengganti!");
+            return;
+        }
+
+        setIsSubmitting(true);
+        
+        // 1. Konversi dari YYYY-MM-DD ke string Hari (Senin, Selasa, dll)
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dayString = days[new Date(newDate).getDay()];
+
+        // 2. Hitung Jam Selesai (Asumsi durasi kelas 2.5 jam)
+        const [hours, minutes] = newTime.split(':');
+        const endHours = String((parseInt(hours) + 2) % 24).padStart(2, '0');
+        const endTime = `${endHours}:${minutes === '00' ? '30' : minutes}:00`; 
+        const startTime = `${newTime}:00`;
+
+        // 3. Update data jadwal di Supabase
+        const { error } = await supabase
+            .from('jadwal')
+            .update({
+                hari: dayString,
+                jam_mulai: startTime,
+                jam_selesai: endTime
+            })
+            .eq('id', rescheduleCourse.id);
+
+        setIsSubmitting(false);
+
+        if (error) {
+            alert('Gagal melakukan reschedule: ' + error.message);
+        } else {
+            // 4. Update state lokal agar tabel otomatis berubah tanpa refresh
+            const updatedCourses = courses.map(c => {
+                if (c.id === rescheduleCourse.id) {
+                    return { ...c, day: dayString, time: `${startTime.slice(0,5)} - ${endTime.slice(0,5)}` };
+                }
+                return c;
+            });
+            setCourses(updatedCourses);
+            setRescheduleCourse(null);
+            setNewDate('');
+            setNewTime('');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#f0f4f9] pb-12 font-sans overflow-x-hidden text-slate-900 relative">
             <div className="fixed top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-600 to-purple-600 z-[200]"></div>
@@ -212,19 +263,29 @@ export default function DosenDashboard() {
                         </div>
                         <div className="space-y-4 mb-8">
                             <div className="relative">
-                                <FaCalendarDay className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input type="date" className="w-full pl-12 pr-4 py-4 bg-slate-100 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Tanggal Pengganti</p>
+                                <input 
+                                    type="date" 
+                                    value={newDate}
+                                    onChange={(e) => setNewDate(e.target.value)}
+                                    className="w-full px-6 py-4 bg-slate-100 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all" 
+                                />
                             </div>
-                            <select className="w-full p-4 bg-slate-100 border-none rounded-2xl font-bold text-slate-700 text-sm focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none">
-                                <option>Select Reason...</option>
-                                <option>Official Meeting</option>
-                                <option>Health Issues</option>
-                                <option>Emergencies</option>
-                            </select>
+                            <div className="relative">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Jam Mulai</p>
+                                <input 
+                                    type="time" 
+                                    value={newTime}
+                                    onChange={(e) => setNewTime(e.target.value)}
+                                    className="w-full px-6 py-4 bg-slate-100 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all" 
+                                />
+                            </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => setRescheduleCourse(null)} className="py-5 bg-slate-200 text-slate-600 font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-300 transition-colors">Cancel</button>
-                            <button onClick={() => { alert('Reschedule synchronized successfully!'); setRescheduleCourse(null); }} className="py-5 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:shadow-lg transition-all">Confirm</button>
+                            <button onClick={() => setRescheduleCourse(null)} disabled={isSubmitting} className="py-5 bg-slate-200 text-slate-600 font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-300 transition-colors">Cancel</button>
+                            <button onClick={handleRescheduleSubmit} disabled={isSubmitting} className="py-5 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:shadow-lg transition-all flex items-center justify-center">
+                                {isSubmitting ? <i className="fas fa-circle-notch animate-spin"></i> : "Confirm"}
+                            </button>
                         </div>
                     </div>
                 </div>
