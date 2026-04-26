@@ -21,18 +21,37 @@ export default function DosenDashboard() {
     useEffect(() => {
         const fetchDosenData = async () => {
             setIsLoading(true);
+            // 1. Dapatkan Auth User saat ini
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
             
-            // 1. Fetch Mahasiswa
+            if (userError || !user) {
+              window.location.href = '/login'; // Redirect kalau belum login
+              return;
+            }
+
+            // 2. Fetch Profil Dosen
+            const { data: dosen } = await supabase
+              .from('dosen')
+              .select('id, nip, nama_lengkap')
+              .eq('user_id', user.id)
+              .single();
+
+            if (!dosen) {
+                setIsLoading(false);
+                return;
+            }
+
+            // 3. Fetch Mahasiswa (semua)
             const { data: mhsData } = await supabase
                 .from('mahasiswa')
-                .select('nim, nama_lengkap')
+                .select('id, nim, nama_lengkap')
                 .order('nama_lengkap');
             
             if (mhsData) {
-                setStudents(mhsData.map(m => ({ nim: m.nim, nama: m.nama_lengkap })));
+                setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap })));
             }
 
-            // 2. Fetch Jadwal (Dosen login saat ini belum dibatasi per dosen, ditampilkan semua jadwal mock)
+            // 4. Fetch Jadwal (Hanya untuk Dosen yang sedang login)
             const { data: jadwalData } = await supabase
                 .from('jadwal')
                 .select(`
@@ -42,7 +61,8 @@ export default function DosenDashboard() {
                     jam_selesai,
                     ruangan,
                     matakuliah(nama_mk)
-                `);
+                `)
+                .eq('id_dosen', dosen.id);
 
             if (jadwalData) {
                 // Konversi data supabase ke format Course
@@ -123,7 +143,7 @@ export default function DosenDashboard() {
                         </div>
                     </div>
 
-                    <LectureMatrix students={students} courseName={activeCourse?.name || ""} />
+                    <LectureMatrix students={students} courseName={activeCourse?.name || ""} courseId={activeCourse?.id.toString() || ""} />
                 </main>
             )}
 

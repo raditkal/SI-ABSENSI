@@ -3,14 +3,11 @@ import { useState } from 'react';
 import { FaInfoCircle, FaTimes } from 'react-icons/fa';
 import { FaCheck } from "react-icons/fa6";
 
-const mataKuliah = [
-    "Praktikum PPL Berorientasi Objek", "PPL Berorientasi Objek",
-    "Kecerdasan Buatan", "Teori Bahasa dan Otomata",
-    "Pengolahan Citra", "Pemrograman Web II",
-    "Rekayasa Perangkat Lunak", "Etika Profesi", "Data Warehouse"
-];
+interface AttendanceTableProps {
+    courses?: any[];
+}
 
-export default function AttendanceTable() {
+export default function AttendanceTable({ courses = [] }: AttendanceTableProps) {
     const [selectedCell, setSelectedCell] = useState<{ mk: string, p: number, status: string } | null>(null);
 
     const colors: Record<string, string> = {
@@ -19,6 +16,8 @@ export default function AttendanceTable() {
         'I': 'bg-amber-500',
         '-': 'bg-slate-100'
     };
+
+    const displayList = courses.length > 0 ? courses : [{ nama_mk: "Mata Kuliah Belum Tersedia", absens: [] }];
 
     return (
         <div className="space-y-4">
@@ -35,31 +34,42 @@ export default function AttendanceTable() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {mataKuliah.map((mk) => {
-                                let hadir = 0;
+                            {displayList.map((mkObj, idx) => {
+                                let hadirCount = 0;
+                                const mkName = mkObj.nama_mk;
+                                const absens = mkObj.absens || [];
+
                                 return (
-                                    <tr key={mk} className="hover:bg-slate-50/50 transition-colors">
+                                    <tr key={`${mkName}-${idx}`} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="p-6 font-extrabold text-slate-700 sticky left-0 bg-white/90 backdrop-blur-md z-10 shadow-[10px_0_15px_-10px_rgba(0,0,0,0.05)] min-w-[200px] uppercase text-[10px] tracking-tighter">
-                                            {mk}
+                                            {mkName}
                                         </td>
                                         {[...Array(16)].map((_, i) => {
-                                            let status = 'H';
-                                            if (mk === "Data Warehouse" && [1, 4, 7, 11].includes(i)) status = 'A';
-                                            if (mk === "Pengolahan Citra" && i === 3) status = 'I';
-                                            if (i > 13) status = '-';
-                                            if (status === 'H') hadir++;
+                                            const pertemuan = i + 1;
+                                            const absensiSesiAwal = absens.find((a: any) => a.pertemuan_ke === pertemuan);
+                                            
+                                            // Mapping status dari database ke huruf (H, A, I, -)
+                                            let status = '-';
+                                            if (absensiSesiAwal) {
+                                                const dbStatus = absensiSesiAwal.status.toLowerCase();
+                                                if (dbStatus === 'hadir') status = 'H';
+                                                else if (dbStatus === 'izin') status = 'I';
+                                                else status = 'A';
+                                            }
+
+                                            if (status === 'H') hadirCount++;
 
                                             return (
                                                 <td key={i} className="p-4 text-center">
                                                     <div
-                                                        onClick={() => status !== '-' && setSelectedCell({ mk, p: i + 1, status })}
+                                                        onClick={() => status !== '-' && setSelectedCell({ mk: mkName, p: pertemuan, status })}
                                                         className={`w-3.5 h-3.5 ${colors[status]} rounded-full mx-auto cursor-pointer hover:scale-150 transition-all shadow-sm border-2 border-white`}
                                                     />
                                                 </td>
                                             );
                                         })}
                                         <td className="p-6 text-center font-black bg-indigo-50/20 text-indigo-600 text-xs">
-                                            {Math.round((hadir / 14) * 100)}%
+                                            {Math.round((hadirCount / 16) * 100)}%
                                         </td>
                                     </tr>
                                 );

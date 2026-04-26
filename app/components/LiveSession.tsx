@@ -2,20 +2,40 @@
 import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaArrowLeft, FaWifi, FaBolt, FaQrcode, FaPowerOff } from "react-icons/fa";
+import { supabase } from '../../lib/supabase';
 
 export default function LiveSession({ course, onBack }: { course: any, onBack: () => void }) {
     const [isPresenting, setIsPresenting] = useState(false);
     const [attendanceCount, setAttendanceCount] = useState(0);
+    const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
 
-    // Simulasi mahasiswa masuk
     useEffect(() => {
-        if (isPresenting && attendanceCount < course.cap) {
-            const timer = setTimeout(() => {
-                setAttendanceCount(prev => prev + 1);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [isPresenting, attendanceCount, course.cap]);
+        if (!isPresenting || !course) return;
+
+        const fetchAttendance = async () => {
+            const { data, error } = await supabase
+                .from('absensi')
+                .select(`
+                    waktu_absen,
+                    mahasiswa (nim, nama_lengkap)
+                `)
+                .eq('id_jadwal', course.id)
+                .order('waktu_absen', { ascending: false });
+
+            if (!error && data) {
+                setRecentAttendees(data);
+                setAttendanceCount(data.length);
+            }
+        };
+
+        // Tarik data saat pertama kali jalan
+        fetchAttendance();
+        
+        // Cek data mahasiswa baru setiap 2.5 detik (Polling)
+        const intervalId = setInterval(fetchAttendance, 2500);
+
+        return () => clearInterval(intervalId);
+    }, [isPresenting, course]);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -69,7 +89,7 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                         <div className="w-full bg-white/10 h-3 rounded-full mt-6 overflow-hidden">
                                             <div
                                                 className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
-                                                style={{ width: `${(attendanceCount / course.cap) * 100}%` }}
+                                                style={{ width: `${(Math.min(attendanceCount / course.cap, 1)) * 100}%` }}
                                             ></div>
                                         </div>
                                     </div>
@@ -88,20 +108,26 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                         Recent Activity <FaBolt className="text-amber-400" />
                     </h5>
                     <div className="flex-1 overflow-y-auto custom-scroll space-y-4 px-2">
-                        {attendanceCount === 0 ? (
+                        {recentAttendees.length === 0 ? (
                             <div className="text-center py-20 opacity-20">
                                 <div className="text-4xl mb-4 animate-pulse uppercase">...</div>
                                 <p className="text-[10px] font-bold uppercase tracking-widest">Waiting for entries...</p>
                             </div>
                         ) : (
-                            <div className="animate-in slide-in-from-top-2 p-4 bg-white rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4">
-                                <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-xl flex items-center justify-center font-extrabold text-xs shadow-md shadow-indigo-100">M</div>
-                                <div className="flex-1">
-                                    <div className="text-[11px] font-extrabold text-slate-800 uppercase tracking-tight">M. Radittyo Kalin</div>
-                                    <div className="text-[9px] font-bold text-slate-400">9021282429041 • ON TIME</div>
+                            recentAttendees.map((att, idx) => (
+                                <div key={idx} className="animate-in slide-in-from-top-2 p-4 bg-white rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-xl flex items-center justify-center font-extrabold text-xs shadow-md shadow-indigo-100">
+                                        {att.mahasiswa?.nama_lengkap?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="text-[11px] font-extrabold text-slate-800 uppercase tracking-tight line-clamp-1">{att.mahasiswa?.nama_lengkap}</div>
+                                        <div className="text-[9px] font-bold text-slate-400">
+                                            {att.mahasiswa?.nim} • {new Date(att.waktu_absen).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                    </div>
+                                    <div className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">VERIFIED</div>
                                 </div>
-                                <div className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">VERIFIED</div>
-                            </div>
+                            ))
                         )}
                     </div>
                 </div>
