@@ -20,6 +20,10 @@ export default function DosenDashboard() {
     const [totalSKS, setTotalSKS] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [newDate, setNewDate] = useState('');
+    const [newTime, setNewTime] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     useEffect(() => {
         const fetchDosenData = async () => {
             setIsLoading(true);
@@ -110,28 +114,6 @@ export default function DosenDashboard() {
         setView('live');
     };
 
-    const filteredCourses = courses.filter(c => {
-        const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        const todayString = namaHari[new Date().getDay()]; // Mendapatkan hari sistem secara dinamis
-        
-        if (activeTab === 'today') return c.day === todayString;
-        if (activeTab === 'upcoming') return c.day !== todayString;
-        return true;
-    });
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-[#f0f4f9] flex flex-col items-center justify-center">
-                <i className="fas fa-circle-notch animate-spin text-4xl text-indigo-500 mb-4"></i>
-                <p className="text-sm font-bold text-slate-500 animate-pulse uppercase tracking-widest">Memuat Dashboard Dosen...</p>
-            </div>
-        );
-    }
-
-    const [newDate, setNewDate] = useState('');
-    const [newTime, setNewTime] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     const handleRescheduleSubmit = async () => {
         if (!rescheduleCourse || !newDate || !newTime) {
             alert("Harap isi tanggal dan jam pengganti!");
@@ -178,6 +160,24 @@ export default function DosenDashboard() {
             setNewTime('');
         }
     };
+
+    const filteredCourses = courses.filter(c => {
+        const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const todayString = namaHari[new Date().getDay()]; // Mendapatkan hari sistem secara dinamis
+        
+        if (activeTab === 'today') return c.day === todayString;
+        if (activeTab === 'upcoming') return c.day !== todayString;
+        return true;
+    });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#f0f4f9] flex flex-col items-center justify-center">
+                <i className="fas fa-circle-notch animate-spin text-4xl text-indigo-500 mb-4"></i>
+                <p className="text-sm font-bold text-slate-500 animate-pulse uppercase tracking-widest">Memuat Dashboard Dosen...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#f0f4f9] pb-12 font-sans overflow-x-hidden text-slate-900 relative">

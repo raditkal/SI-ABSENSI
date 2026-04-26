@@ -12,6 +12,8 @@ export default function MahasiswaDashboard() {
   const [activeJadwal, setActiveJadwal] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [todaySchedules, setTodaySchedules] = useState<any[]>([]);
+
   useEffect(() => {
     const defaultStudentNIM = '101'; // Default student
     const fetchDashboardData = async () => {
@@ -37,16 +39,13 @@ export default function MahasiswaDashboard() {
         const studentId = mahasiswa.id;
 
         // 3. Fetch Matakuliah List and Associated Absensi
-        // First get all Matakuliah to display the rows
         const { data: mkData } = await supabase.from('matakuliah').select('*');
-        // Then get all Absensi records for this student
         const { data: absensiData } = await supabase
             .from('absensi')
             .select('pertemuan_ke, status, id_jadwal, jadwal(id_matakuliah)')
             .eq('id_mahasiswa', studentId);
 
         if (mkData) {
-            // Map absensi into the matakuliah array
             const mappedCourses = mkData.map((mk: any) => {
                 const absensForMk = absensiData 
                     ? absensiData.filter((a: any) => a.jadwal?.id_matakuliah === mk.id)
@@ -65,20 +64,24 @@ export default function MahasiswaDashboard() {
         }
       }
 
-      // 3. Fetch Jadwal for Active Schedule
-      const { data: jadwalData } = await supabase
-          .from('jadwal')
-          .select(`
+      // 3. Cari Jadwal yang AKTIF saat ini (Berdasarkan Hari & Jam)
+      const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const todayName = namaHari[new Date().getDay()];
+
+      const { data: allToday } = await supabase
+        .from('jadwal')
+        .select(`
             id,
             hari,
             jam_mulai,
             jam_selesai,
             ruangan,
             matakuliah(nama_mk)
-        `).limit(1);
+        `)
+        .eq('hari', todayName);
 
-      if (jadwalData && jadwalData.length > 0) {
-        setActiveJadwal(jadwalData[0]);
+      if (allToday) {
+        setTodaySchedules(allToday);
       }
       
       setIsLoading(false);
@@ -86,6 +89,37 @@ export default function MahasiswaDashboard() {
 
     fetchDashboardData();
   }, []);
+
+  // Interval Checker: Mengecek jadwal mana yang aktif setiap 30 detik
+  useEffect(() => {
+      const checkActiveSchedule = () => {
+          if (todaySchedules.length === 0) {
+              setActiveJadwal(null);
+              return;
+          }
+
+          const now = new Date();
+          const timeNow = now.getHours() * 60 + now.getMinutes();
+
+          const active = todaySchedules.find(j => {
+              const [h1, m1] = j.jam_mulai.split(':').map(Number);
+              const [h2, m2] = j.jam_selesai.split(':').map(Number);
+              const start = h1 * 60 + m1;
+              const end = h2 * 60 + m2;
+              return timeNow >= start && timeNow <= end;
+          });
+
+          setActiveJadwal(active || null);
+      };
+
+      // Cek langsung saat effect berjalan
+      checkActiveSchedule();
+
+      // Set interval 30 detik
+      const intervalId = setInterval(checkActiveSchedule, 30000);
+
+      return () => clearInterval(intervalId);
+  }, [todaySchedules]);
 
   if (isLoading) {
       return (
