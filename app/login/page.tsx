@@ -107,26 +107,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Level Akses */}
-            <div className="group">
-              <label className="block text-[11px] font-[800] text-[#94a3b8] uppercase tracking-[0.15em] mb-3 ml-2">
-                Level Akses
-              </label>
-              <div className="flex items-center bg-[#f8faff] border-2 border-transparent rounded-[1.5rem] p-1 px-3 transition-all duration-300 focus-within:bg-white focus-within:border-[#c7d2fe] focus-within:shadow-[0_15px_30px_-10px_rgba(99,102,241,0.2)] focus-within:-translate-y-0.5">
-                <div className="w-[45px] h-[45px] flex items-center justify-center text-[#818cf8] text-lg">
-                  <FaUser className="text-l" />
-                </div>
-                <select
-                  className="w-full bg-transparent border-none outline-none py-4 text-[0.95rem] font-semibold text-slate-700 appearance-none cursor-pointer"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <option value="mahasiswa">Mahasiswa (S1/D3)</option>
-                  <option value="dosen">Tenaga Pengajar (Dosen)</option>
-                  <option value="admin">Administrator</option>
-                </select>
-              </div>
-            </div>
 
             {/* Tombol Login */}
             <button

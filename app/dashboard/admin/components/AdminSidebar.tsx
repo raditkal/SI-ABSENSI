@@ -1,5 +1,7 @@
 import React from 'react';
 import { FaThLarge, FaUsers, FaUserTie, FaCalendarDay, FaChartPie, FaSignOutAlt, FaFingerprint } from "react-icons/fa";
+import { supabase } from '../../../../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 interface AdminSidebarProps {
   currentTab: string;
@@ -7,6 +9,13 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebarProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   return (
     <aside 
         className="w-72 rounded-[2.5rem] text-white hidden lg:flex flex-col p-6 shadow-2xl sticky top-4 h-[calc(100vh-2rem)]"
@@ -44,7 +53,9 @@ export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebar
         </nav>
 
         <div className="mt-auto p-4 bg-white/5 rounded-[2rem] border border-white/5">
-            <button className="w-full flex items-center justify-center gap-2 py-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest">
                 Keluar <FaSignOutAlt />
             </button>
         </div>

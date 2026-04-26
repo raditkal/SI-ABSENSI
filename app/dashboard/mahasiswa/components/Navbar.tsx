@@ -1,8 +1,17 @@
 import React from 'react';
 import { FaFingerprint } from "react-icons/fa";
 import { FaPowerOff } from "react-icons/fa6";
+import { supabase } from '../../../../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   return (
     <nav className="fixed top-4 left-4 right-4 z-[100]">
       <div className="max-w-7xl mx-auto glass rounded-[2rem] p-4 flex justify-between items-center shadow-xl shadow-indigo-100/20">
@@ -15,7 +24,9 @@ export default function Navbar() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+          <button 
+            onClick={handleLogout}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
             <FaPowerOff className="text-xl"/>
           </button>
         </div>

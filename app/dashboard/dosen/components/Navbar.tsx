@@ -1,7 +1,17 @@
 import React from 'react';
 import { FaFingerprint } from "react-icons/fa";
+import { FaPowerOff } from "react-icons/fa6";
+import { supabase } from '../../../../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   return (
     <nav className="sticky top-0 z-[100] glass px-6 py-4 mb-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -17,13 +27,18 @@ export default function Navbar() {
             <div className="flex items-center gap-5">
                 <div className="text-right hidden sm:block">
                     <p className="text-[9px] font-black text-indigo-500 uppercase leading-none">Welcome back,</p>
-                    <p className="text-xs font-extrabold text-slate-700">Dr. Aris Sudarman</p>
+                    <p className="text-xs font-extrabold text-slate-700">Dosen</p>
                 </div>
                 <div className="relative group">
                     <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px] cursor-pointer">
-                        <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center font-bold text-indigo-600">AS</div>
+                        <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center font-bold text-indigo-600">D</div>
                     </div>
                 </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all ml-2">
+                  <FaPowerOff className="text-xl"/>
+                </button>
             </div>
         </div>
     </nav>
