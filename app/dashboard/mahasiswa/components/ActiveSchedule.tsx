@@ -28,31 +28,55 @@ export default function ActiveSchedule({ schedule, studentInfo }: ActiveSchedule
       setErrorMsg('');
 
       try {
-          // 1. Fase Verifikasi Lokasi (Simulasi Geolocation)
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Menggunakan API Geolocation asli jika tersedia (dengan fallback aman)
-          const locationCheck = await new Promise<boolean>((resolve) => {
+          // 1. Fetch Setting Radius & Koordinat Kampus dari Supabase
+          const { data: config } = await supabase.from('settings').select('*').eq('id', 1).single();
+          const kampusLat = parseFloat(config?.kampus_lat || '-3.218552693892837');
+          const kampusLng = parseFloat(config?.kampus_lng || '104.65087595204481');
+          const maxRadius = config?.radius_meter || 500;
+
+          // 2. Fase Verifikasi Lokasi (API Geolocation Asli)
+          const distanceCheck = await new Promise<{valid: boolean, message: string}>((resolve) => {
               if (navigator.geolocation) {
                   navigator.geolocation.getCurrentPosition(
                       (pos) => {
-                          // Jika sukses dapat lokasi (Dalam skenario nyata, hitung jarak Haversine ke kampus di sini)
-                          resolve(true); 
+                          const userLat = pos.coords.latitude;
+                          const userLng = pos.coords.longitude;
+                          
+                          // Rumus Haversine untuk menghitung jarak antara dua koordinat
+                          const toRad = (x: number) => (x * Math.PI) / 180;
+                          const R = 6371e3; // Radius Bumi dalam meter
+                          const dLat = toRad(kampusLat - userLat);
+                          const dLon = toRad(kampusLng - userLng);
+                          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                                    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(toRad(userLat)) * Math.cos(toRad(kampusLat));
+                          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                          const distance = R * c;
+
+                          if (distance <= maxRadius) {
+                              resolve({valid: true, message: "OK"});
+                          } else {
+                              resolve({valid: false, message: `Di luar jangkauan (Jarak: ${Math.round(distance)}m, Maks: ${maxRadius}m)`});
+                          }
                       },
                       (err) => {
-                          // Bypass error untuk keperluan demo jika GPS diblokir
-                          console.log("GPS Blocked, using bypass for demo.");
-                          resolve(true); 
+                          // Karena lingkungan lokal sering bermasalah dengan GPS tanpa HTTPS, 
+                          // beri fallback bypass untuk development environment atau tampilkan pesan error jika live.
+                          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                              console.warn("Bypass GPS untuk Localhost Development");
+                              resolve({valid: true, message: "OK (Localhost Bypass)"});
+                          } else {
+                              resolve({valid: false, message: "GPS diblokir/tidak aktif. Tolong izinkan akses lokasi."}); 
+                          }
                       },
-                      { timeout: 3000 }
+                      { timeout: 10000, enableHighAccuracy: true }
                   );
               } else {
-                  resolve(true); // Bypass jika browser tidak support
+                  resolve({valid: false, message: "Browser tidak mendukung GPS."});
               }
           });
 
-          if (!locationCheck) {
-              throw new Error("Anda berada di luar area kampus (Radius > 500m).");
+          if (!distanceCheck.valid) {
+              throw new Error(distanceCheck.message);
           }
 
           // 2. Fase Validasi & Insert Data ke Supabase
