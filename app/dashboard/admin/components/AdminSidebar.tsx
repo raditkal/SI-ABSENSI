@@ -1,14 +1,16 @@
 import React from 'react';
-import { FaThLarge, FaUsers, FaUserTie, FaCalendarDay, FaChartPie, FaSignOutAlt, FaFingerprint } from "react-icons/fa";
+import { FaThLarge, FaUsers, FaUserTie, FaCalendarDay, FaChartPie, FaSignOutAlt, FaFingerprint, FaTimes } from "react-icons/fa";
 import { supabase } from '../../../../lib/supabase';
 import { useRouter } from 'next/navigation';
 
 interface AdminSidebarProps {
     currentTab: string;
     setCurrentTab: (tab: string) => void;
+    isOpen: boolean;
+    setIsOpen: (open: boolean) => void;
 }
 
-export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebarProps) {
+export default function AdminSidebar({ currentTab, setCurrentTab, isOpen, setIsOpen }: AdminSidebarProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -17,13 +19,30 @@ export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebar
     };
 
     return (
-        <aside
-            className="w-72 rounded-[2.5rem] text-white hidden lg:flex flex-col p-6 shadow-2xl sticky top-4 h-[calc(100vh-2rem)]"
-            style={{
-                backgroundColor: '#0f172a',
-                backgroundImage: 'radial-gradient(at 0% 0%, hsla(253,16%,15%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,25%,1) 0, transparent 50%)'
-            }}
-        >
+        <>
+            {/* Backdrop for mobile */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            <aside
+                className={`fixed lg:sticky top-0 lg:top-4 left-0 h-full lg:h-[calc(100vh-2rem)] w-72 lg:w-72 rounded-r-[3rem] lg:rounded-[2.5rem] text-white flex flex-col p-6 shadow-2xl transition-all duration-300 z-[70] lg:z-10 ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                }`}
+                style={{
+                    backgroundColor: '#0f172a',
+                    backgroundImage: 'radial-gradient(at 0% 0%, hsla(253,16%,15%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,25%,1) 0, transparent 50%)'
+                }}
+            >
+                <button 
+                    onClick={() => setIsOpen(false)}
+                    className="lg:hidden absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"
+                >
+                    <FaTimes />
+                </button>
             <div className="py-8 px-4 flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
                     <FaFingerprint className="text-indigo-400 text-xl" />
@@ -63,5 +82,6 @@ export default function AdminSidebar({ currentTab, setCurrentTab }: AdminSidebar
                 </button>
             </div>
         </aside>
-    );
+    </>
+);
 }

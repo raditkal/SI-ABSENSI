@@ -26,10 +26,10 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
             setIsLoading(true);
             const { data: jadwal } = await supabase.from('jadwal').select('id, hari, matakuliah(nama_mk), dosen(nama_lengkap)');
             if (jadwal) setJadwalList(jadwal);
-            
+
             const { data: mhs } = await supabase.from('mahasiswa').select('id, nama_lengkap, nim');
             if (mhs) setAllMahasiswa(mhs);
-            
+
             setIsLoading(false);
         };
         initData();
@@ -90,8 +90,8 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
         }
     };
 
-    const filteredMhs = allMahasiswa.filter(m => 
-        m.nama_lengkap.toLowerCase().includes(searchMhs.toLowerCase()) || 
+    const filteredMhs = allMahasiswa.filter(m =>
+        m.nama_lengkap.toLowerCase().includes(searchMhs.toLowerCase()) ||
         m.nim.includes(searchMhs)
     );
 
@@ -103,14 +103,14 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                 </div> Kembali
             </button>
 
-            <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 mb-8">
+            <div className="bg-white rounded-3xl lg:rounded-[3rem] p-6 lg:p-10 shadow-sm border border-slate-100 mb-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
                     <div>
                         <h3 className="text-2xl font-black text-slate-800 uppercase italic">Koreksi Log Presensi</h3>
                         <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Pilih Jadwal Kuliah untuk melihat & mengedit kehadiran</p>
                     </div>
                     <div className="w-full lg:w-1/3">
-                        <select 
+                        <select
                             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-slate-700"
                             value={selectedJadwal}
                             onChange={(e) => setSelectedJadwal(e.target.value)}
@@ -129,14 +129,14 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                     <>
                         <div className="flex justify-between items-center mb-6">
                             <h4 className="text-sm font-black text-slate-600 uppercase tracking-widest">Daftar Kehadiran Terekam</h4>
-                            <button 
+                            <button
                                 onClick={() => setIsAddModalOpen(true)}
                                 className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center gap-2"
                             >
                                 <FaPlus /> Tambah Manual
                             </button>
                         </div>
-                        
+
                         {isLoading && absensiList.length === 0 ? (
                             <div className="text-center py-10 text-slate-400 font-bold"><i className="fas fa-circle-notch animate-spin text-2xl mb-3 block"></i>Memuat data...</div>
                         ) : absensiList.length === 0 ? (
@@ -165,12 +165,11 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                                 <td className="p-5 text-sm font-black text-indigo-500">{absensi.pertemuan_ke}</td>
                                                 <td className="p-5">
                                                     <div className="flex items-center gap-2">
-                                                        <select 
-                                                            className={`p-2 rounded-xl text-xs font-bold border-2 transition-all outline-none ${
-                                                                absensi.status === 'Hadir' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
-                                                                absensi.status === 'Izin' ? 'border-amber-200 bg-amber-50 text-amber-700' :
-                                                                'border-rose-200 bg-rose-50 text-rose-700'
-                                                            }`}
+                                                        <select
+                                                            className={`p-2 rounded-xl text-xs font-bold border-2 transition-all outline-none ${absensi.status === 'Hadir' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+                                                                    absensi.status === 'Izin' ? 'border-amber-200 bg-amber-50 text-amber-700' :
+                                                                        'border-rose-200 bg-rose-50 text-rose-700'
+                                                                }`}
                                                             value={absensi.status}
                                                             onChange={(e) => updateStatus(absensi.id, e.target.value)}
                                                             disabled={savingId === absensi.id}
@@ -199,33 +198,33 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                         <button type="button" onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 w-10 h-10 bg-slate-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full flex items-center justify-center transition-all">
                             <FaTimes />
                         </button>
-                        
+
                         <div className="mb-8">
                             <h3 className="text-xl font-extrabold text-slate-800 uppercase tracking-tighter flex items-center gap-3">
                                 <FaEdit className="text-indigo-500" /> Input Presensi Manual
                             </h3>
                             <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Digunakan jika sistem error / ada izin resmi</p>
                         </div>
-                        
+
                         <div className="space-y-6 mb-8">
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-2">Cari Mahasiswa</p>
                                 <div className="relative">
                                     <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    <input 
-                                        type="text" 
-                                        value={searchMhs} 
-                                        onChange={e => setSearchMhs(e.target.value)} 
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" 
-                                        placeholder="Ketik Nama atau NIM..." 
+                                    <input
+                                        type="text"
+                                        value={searchMhs}
+                                        onChange={e => setSearchMhs(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm"
+                                        placeholder="Ketik Nama atau NIM..."
                                     />
                                 </div>
-                                
+
                                 {searchMhs && !selectedMhs && (
                                     <div className="mt-2 max-h-40 overflow-y-auto bg-slate-50 border border-slate-100 rounded-2xl p-2 shadow-inner">
                                         {filteredMhs.slice(0, 5).map(m => (
-                                            <button 
-                                                key={m.id} 
+                                            <button
+                                                key={m.id}
                                                 type="button"
                                                 onClick={() => { setSelectedMhs(m.id); setSearchMhs(m.nama_lengkap); }}
                                                 className="w-full text-left px-4 py-2 hover:bg-white rounded-xl transition-all font-bold text-xs text-slate-600 uppercase flex justify-between"
@@ -242,9 +241,9 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-2">Status</p>
-                                    <select 
-                                        value={manualStatus} 
-                                        onChange={e => setManualStatus(e.target.value)} 
+                                    <select
+                                        value={manualStatus}
+                                        onChange={e => setManualStatus(e.target.value)}
                                         className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none text-sm"
                                     >
                                         <option value="Hadir">Hadir</option>
@@ -254,20 +253,20 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-2">Pertemuan Ke</p>
-                                    <input 
-                                        type="number" 
-                                        min="1" 
-                                        value={pertemuanKe} 
-                                        onChange={e => setPertemuanKe(Number(e.target.value))} 
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none text-sm" 
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={pertemuanKe}
+                                        onChange={e => setPertemuanKe(Number(e.target.value))}
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 outline-none text-sm"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
-                            disabled={isLoading || !selectedMhs} 
+                        <button
+                            type="submit"
+                            disabled={isLoading || !selectedMhs}
                             className="w-full py-5 bg-indigo-600 text-white font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isLoading ? <i className="fas fa-circle-notch animate-spin"></i> : <><FaCheckCircle /> Simpan Data</>}

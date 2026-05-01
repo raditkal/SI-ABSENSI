@@ -37,7 +37,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                <div className="lg:col-span-4 bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center">
+                <div className="lg:col-span-4 bg-white p-6 lg:p-8 rounded-3xl lg:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center">
                     <h3 className="text-xs font-black text-slate-400 uppercase mb-8 tracking-[0.2em] self-start italic">Global Attendance</h3>
                     <div className="relative w-full flex justify-center">
                         <div className="max-w-[240px]">
@@ -77,7 +77,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                 </div>
 
                 <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div onClick={() => setCurrentTab('mhs')} className="bg-indigo-600 p-8 rounded-[3rem] text-white flex flex-col justify-between cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-2 hover:shadow-2xl">
+                    <div onClick={() => setCurrentTab('mhs')} className="bg-indigo-600 p-6 lg:p-8 rounded-3xl lg:rounded-[3rem] text-white flex flex-col justify-between cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-2 hover:shadow-2xl min-h-[200px]">
                         <FaUsers className="absolute -right-4 -bottom-4 text-9xl opacity-10 group-hover:scale-110 transition-transform" />
                         <div className="relative z-10">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200">Total Mahasiswa</p>
@@ -88,7 +88,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                         </div>
                     </div>
 
-                    <div onClick={() => setCurrentTab('dosen')} className="bg-white p-8 rounded-[3rem] border border-slate-100 flex flex-col justify-between cursor-pointer group transition-all hover:-translate-y-2 hover:shadow-xl">
+                    <div onClick={() => setCurrentTab('dosen')} className="bg-white p-6 lg:p-8 rounded-3xl lg:rounded-[3rem] border border-slate-100 flex flex-col justify-between cursor-pointer group transition-all hover:-translate-y-2 hover:shadow-xl min-h-[200px]">
                         <div>
                             <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white mb-6 group-hover:bg-indigo-600 transition-colors">
                                 <FaUserTie className="text-xl" />
@@ -99,7 +99,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                         <p className="text-indigo-600 text-xs font-bold mt-4 underline decoration-2 underline-offset-4">Monitor SKS & MK</p>
                     </div>
 
-                    <div onClick={() => setCurrentTab('matakuliah')} className="md:col-span-2 bg-slate-900 p-8 rounded-[3rem] flex items-center justify-between cursor-pointer group transition-all hover:-translate-y-2 hover:shadow-2xl">
+                    <div onClick={() => setCurrentTab('matakuliah')} className="md:col-span-2 bg-slate-900 p-6 lg:p-8 rounded-3xl lg:rounded-[3rem] flex items-center justify-between cursor-pointer group transition-all hover:-translate-y-2 hover:shadow-2xl">
                         <div className="flex items-center gap-8">
                             <div className="hidden sm:flex w-20 h-20 rounded-[2rem] bg-indigo-500 items-center justify-center text-white text-3xl shadow-lg shadow-indigo-500/30">
                                 <FaCalendarCheck />

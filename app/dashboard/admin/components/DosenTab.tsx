@@ -24,7 +24,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                 .from('dosen')
                 .select('*')
                 .order('nama_lengkap', { ascending: true });
-            
+
             if (!error && data) {
                 setDosenList(data);
             }
@@ -35,9 +35,9 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
     }, []);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newDosen, setNewDosen] = useState({ 
-        password: '', 
-        nip: '', nama_lengkap: '', gelar: '' 
+    const [newDosen, setNewDosen] = useState({
+        password: '',
+        nip: '', nama_lengkap: '', gelar: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,11 +70,11 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
 
             setIsAddModalOpen(false);
             setNewDosen({ password: '', nip: '', nama_lengkap: '', gelar: '' });
-            
+
             // Trigger re-fetch
             const { data: dData } = await supabase.from('dosen').select('*').order('nama_lengkap', { ascending: true });
             if (dData) setDosenList(dData);
-            
+
             alert(`Sukses! Akun Dosen berhasil dibuat.\nEmail Login: ${autoEmail}`);
         } catch (err: any) {
             alert('Gagal menambahkan dosen: ' + err.message);
@@ -91,7 +91,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                         <FaArrowLeft />
                     </div> Kembali
                 </button>
-                <button 
+                <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-500 hover:shadow-lg transition-all flex items-center gap-2"
                 >
@@ -101,9 +101,9 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
 
             <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
-                
+
                 <h3 className="text-xl font-black text-slate-800 mb-8 uppercase italic underline decoration-indigo-500 decoration-4 relative z-10">Direktori Dosen</h3>
-                
+
                 <div className="overflow-x-auto relative z-10">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-left">
@@ -168,19 +168,19 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                                 <div className="space-y-3">
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">NIP</p>
-                                        <input required type="text" value={newDosen.nip} onChange={e => setNewDosen({...newDosen, nip: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nomor Induk Pegawai" />
+                                        <input required type="text" value={newDosen.nip} onChange={e => setNewDosen({ ...newDosen, nip: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nomor Induk Pegawai" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nama Lengkap</p>
-                                        <input required type="text" value={newDosen.nama_lengkap} onChange={e => setNewDosen({...newDosen, nama_lengkap: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nama Dosen (Tanpa Gelar)" />
+                                        <input required type="text" value={newDosen.nama_lengkap} onChange={e => setNewDosen({ ...newDosen, nama_lengkap: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nama Dosen (Tanpa Gelar)" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Gelar</p>
-                                        <input type="text" value={newDosen.gelar} onChange={e => setNewDosen({...newDosen, gelar: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Contoh: S.Kom., M.Kom." />
+                                        <input type="text" value={newDosen.gelar} onChange={e => setNewDosen({ ...newDosen, gelar: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Contoh: S.Kom., M.Kom." />
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
                                 <p className="text-xs font-black text-indigo-600 mb-4 uppercase tracking-widest"><i className="fas fa-key mr-2"></i>Kredensial Login</p>
                                 <div className="space-y-3">
@@ -190,7 +190,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Password Awal</p>
-                                        <input required type="text" value={newDosen.password} onChange={e => setNewDosen({...newDosen, password: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: Dosen12345!" />
+                                        <input required type="text" value={newDosen.password} onChange={e => setNewDosen({ ...newDosen, password: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: Dosen12345!" />
                                     </div>
                                 </div>
                             </div>

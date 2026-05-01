@@ -26,7 +26,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
     const [activeSubTab, setActiveSubTab] = useState<'jadwal' | 'matakuliah'>('jadwal');
     const [activeHari, setActiveHari] = useState('Senin');
     const hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-    
+
     const [jadwalList, setJadwalList] = useState<JadwalData[]>([]);
     const [mkList, setMkList] = useState<any[]>([]);
     const [dosenList, setDosenList] = useState<any[]>([]);
@@ -40,7 +40,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
 
     const suggestNextKodeMk = () => {
         if (mkList.length === 0) return 'MK001';
-        
+
         // Cari kode yang berformat MKxxx dan ambil angka terbesarnya
         const numericCodes = mkList
             .map(mk => {
@@ -48,7 +48,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                 return match ? parseInt(match[1]) : 0;
             })
             .filter(n => n > 0);
-        
+
         const nextNum = numericCodes.length > 0 ? Math.max(...numericCodes) + 1 : mkList.length + 1;
         return `MK${nextNum.toString().padStart(3, '0')}`;
     };
@@ -135,7 +135,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
             return;
         }
         setIsSubmitting(true);
-        
+
         let error;
         if (editingJadwal) {
             const { error: err } = await supabase.from('jadwal').update(newJadwal).eq('id', editingJadwal.id);
@@ -159,7 +159,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
     const renderJadwalGrid = () => {
         if (isLoading) return <div className="col-span-full py-10 text-center text-slate-400 font-bold"><i className="fas fa-circle-notch animate-spin text-2xl mb-3 block"></i>Memuat...</div>;
         if (jadwalList.length === 0) return <div className="col-span-full py-10 text-center text-slate-400 font-bold">Belum ada jadwal di hari {activeHari}</div>;
-        
+
         return jadwalList.map((j) => (
             <div key={j.id} className="p-6 border border-slate-100 rounded-[2.5rem] bg-slate-50 flex flex-col justify-between hover:bg-white transition-all shadow-sm hover:shadow-lg">
                 <div>
@@ -239,15 +239,15 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative overflow-hidden">
+            <div className="bg-white rounded-3xl lg:rounded-[3rem] p-6 lg:p-10 shadow-sm border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
 
                 {activeSubTab === 'jadwal' && (
                     <>
                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6 relative z-10">
-                            <div className="flex flex-wrap bg-slate-100 p-1.5 rounded-2xl gap-1">
+                            <div className="flex flex-wrap bg-slate-100 p-1.5 rounded-2xl gap-1 overflow-x-auto max-w-full">
                                 {hariList.map(h => (
-                                    <button key={h} onClick={() => setActiveHari(h)} className={`px-6 py-2.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider ${activeHari === h ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white/50'}`}>{h}</button>
+                                    <button key={h} onClick={() => setActiveHari(h)} className={`px-4 lg:px-6 py-2.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider whitespace-nowrap ${activeHari === h ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white/50'}`}>{h}</button>
                                 ))}
                             </div>
                             <button onClick={() => {
@@ -292,17 +292,17 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                             <div>
                                 <div className="flex justify-between items-center mb-1 ml-2">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kode MK</p>
-                                    <button type="button" onClick={() => setNewMk({...newMk, kode_mk: suggestNextKodeMk()})} className="text-[9px] font-black text-indigo-500 uppercase hover:underline">Auto-Fill</button>
+                                    <button type="button" onClick={() => setNewMk({ ...newMk, kode_mk: suggestNextKodeMk() })} className="text-[9px] font-black text-indigo-500 uppercase hover:underline">Auto-Fill</button>
                                 </div>
-                                <input required type="text" value={newMk.kode_mk} onChange={e => setNewMk({...newMk, kode_mk: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm uppercase" placeholder="Misal: MK001" />
+                                <input required type="text" value={newMk.kode_mk} onChange={e => setNewMk({ ...newMk, kode_mk: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm uppercase" placeholder="Misal: MK001" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nama Mata Kuliah</p>
-                                <input required type="text" value={newMk.nama_mk} onChange={e => setNewMk({...newMk, nama_mk: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" placeholder="Contoh: Pemrograman Web" />
+                                <input required type="text" value={newMk.nama_mk} onChange={e => setNewMk({ ...newMk, nama_mk: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" placeholder="Contoh: Pemrograman Web" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Jumlah SKS</p>
-                                <input required type="number" value={newMk.sks} onChange={e => setNewMk({...newMk, sks: Number(e.target.value)})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" />
+                                <input required type="number" value={newMk.sks} onChange={e => setNewMk({ ...newMk, sks: Number(e.target.value) })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -328,14 +328,14 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                         <div className="space-y-4 mb-8">
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Mata Kuliah</p>
-                                <select required value={newJadwal.id_matakuliah} onChange={e => setNewJadwal({...newJadwal, id_matakuliah: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
+                                <select required value={newJadwal.id_matakuliah} onChange={e => setNewJadwal({ ...newJadwal, id_matakuliah: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
                                     <option value="">-- Pilih Mata Kuliah --</option>
                                     {mkList.map(mk => <option key={mk.id} value={mk.id}>{mk.nama_mk}</option>)}
                                 </select>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Dosen Pengampu</p>
-                                <select required value={newJadwal.id_dosen} onChange={e => setNewJadwal({...newJadwal, id_dosen: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
+                                <select required value={newJadwal.id_dosen} onChange={e => setNewJadwal({ ...newJadwal, id_dosen: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
                                     <option value="">-- Pilih Dosen --</option>
                                     {dosenList.map(d => <option key={d.id} value={d.id}>{d.nama_lengkap}</option>)}
                                 </select>
@@ -343,22 +343,22 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Hari</p>
-                                    <select value={newJadwal.hari} onChange={e => setNewJadwal({...newJadwal, hari: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
+                                    <select value={newJadwal.hari} onChange={e => setNewJadwal({ ...newJadwal, hari: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
                                         {hariList.map(h => <option key={h} value={h}>{h}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Jam Mulai</p>
-                                    <input required type="time" value={newJadwal.jam_mulai} onChange={e => setNewJadwal({...newJadwal, jam_mulai: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" />
+                                    <input required type="time" value={newJadwal.jam_mulai} onChange={e => setNewJadwal({ ...newJadwal, jam_mulai: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" />
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Jam Selesai</p>
-                                    <input required type="time" value={newJadwal.jam_selesai} onChange={e => setNewJadwal({...newJadwal, jam_selesai: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" />
+                                    <input required type="time" value={newJadwal.jam_selesai} onChange={e => setNewJadwal({ ...newJadwal, jam_selesai: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" />
                                 </div>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Ruangan</p>
-                                <input required type="text" value={newJadwal.ruangan} onChange={e => setNewJadwal({...newJadwal, ruangan: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" placeholder="Contoh: D301" />
+                                <input required type="text" value={newJadwal.ruangan} onChange={e => setNewJadwal({ ...newJadwal, ruangan: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" placeholder="Contoh: D301" />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">

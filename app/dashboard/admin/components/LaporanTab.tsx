@@ -14,6 +14,7 @@ export default function LaporanTab({ setCurrentTab }: LaporanTabProps) {
     const [redZone, setRedZone] = useState<any[]>([]);
     const [matriksMK, setMatriksMK] = useState<any[]>([]);
     const [mahasiswaStats, setMahasiswaStats] = useState<any[]>([]);
+    const [trenData, setTrenData] = useState<{labels: string[], data: number[]}>({ labels: ['Belum ada data'], data: [0] });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -23,6 +24,7 @@ export default function LaporanTab({ setCurrentTab }: LaporanTabProps) {
             // Fetch semua absensi
             const { data: absensiData } = await supabase.from('absensi').select(`
                 status,
+                pertemuan_ke,
                 id_mahasiswa,
                 id_jadwal,
                 mahasiswa (nama_lengkap, nim),
@@ -36,11 +38,24 @@ export default function LaporanTab({ setCurrentTab }: LaporanTabProps) {
             if (absensiData && allMahasiswa && allMatakuliah) {
                 // 1. Kalkulasi Zona Merah
                 const hadirCountMap: Record<string, number> = {};
+                const pertemuanMap: Record<number, number> = {}; // Untuk grafik tren
+
                 absensiData.forEach(a => {
                     if (a.status.toLowerCase() === 'hadir') {
+                        // Untuk zona merah
                         hadirCountMap[a.id_mahasiswa] = (hadirCountMap[a.id_mahasiswa] || 0) + 1;
+                        
+                        // Untuk grafik tren (dikelompokkan berdasarkan pertemuan)
+                        const p = a.pertemuan_ke || 1;
+                        pertemuanMap[p] = (pertemuanMap[p] || 0) + 1;
                     }
                 });
+
+                // Siapkan data grafik
+                const sortedPertemuan = Object.keys(pertemuanMap).map(Number).sort((a,b) => a - b);
+                const chartLabels = sortedPertemuan.length > 0 ? sortedPertemuan.map(p => `Pertemuan ${p}`) : ['Belum ada data'];
+                const chartData = sortedPertemuan.length > 0 ? sortedPertemuan.map(p => pertemuanMap[p]) : [0];
+                setTrenData({ labels: chartLabels, data: chartData });
 
                 const calculatedStats = allMahasiswa.map(mhs => {
                     const totalHadir = hadirCountMap[mhs.id] || 0;
@@ -140,16 +155,16 @@ export default function LaporanTab({ setCurrentTab }: LaporanTabProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <div className="lg:col-span-2 bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col justify-between h-[400px] print:border-none print:shadow-none print:p-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white p-6 lg:p-10 rounded-3xl lg:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col justify-between h-[400px] print:border-none print:shadow-none print:p-0">
                     <h3 className="text-lg font-black text-slate-800 uppercase italic">Tren Akumulasi Sistem</h3>
                     <div className="h-[250px] w-full mt-4">
                         <Line 
                             data={{
-                                labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4 (Live)'],
+                                labels: trenData.labels,
                                 datasets: [{ 
-                                    label: 'Kehadiran Aktif', 
-                                    data: [12, 19, 15, matriksMK.reduce((acc, curr) => acc + curr.total_hadir, 0)], // Menggunakan data live di titik terakhir
+                                    label: 'Total Kehadiran', 
+                                    data: trenData.data,
                                     borderColor: '#6366f1', 
                                     backgroundColor: 'rgba(99, 102, 241, 0.1)', 
                                     fill: true, 

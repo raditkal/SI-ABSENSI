@@ -27,7 +27,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                 .from('mahasiswa')
                 .select('*')
                 .eq('kelas', activeClass);
-            
+
             if (!error && data) {
                 setMahasiswaList(data);
             }
@@ -71,9 +71,9 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
     };
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newMhs, setNewMhs] = useState({ 
-        password: '', 
-        nim: '', nama_lengkap: '', kelas: 'TI-A', angkatan: new Date().getFullYear() 
+    const [newMhs, setNewMhs] = useState({
+        password: '',
+        nim: '', nama_lengkap: '', kelas: 'TI-A', angkatan: new Date().getFullYear()
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -107,11 +107,11 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
 
             setIsAddModalOpen(false);
             setNewMhs({ password: '', nim: '', nama_lengkap: '', kelas: activeClass, angkatan: new Date().getFullYear() });
-            
+
             // Trigger re-fetch
             const { data: mhsData } = await supabase.from('mahasiswa').select('*').eq('kelas', activeClass);
             if (mhsData) setMahasiswaList(mhsData);
-            
+
             alert(`Sukses! Akun Mahasiswa berhasil dibuat.\nEmail Login: ${autoEmail}`);
         } catch (err: any) {
             alert('Gagal menambahkan mahasiswa: ' + err.message);
@@ -128,32 +128,32 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                         <FaArrowLeft />
                     </div> Kembali
                 </button>
-                <button 
-                    onClick={() => { setNewMhs({...newMhs, kelas: activeClass}); setIsAddModalOpen(true); }}
+                <button
+                    onClick={() => { setNewMhs({ ...newMhs, kelas: activeClass }); setIsAddModalOpen(true); }}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-500 hover:shadow-lg transition-all flex items-center gap-2"
                 >
                     <i className="fas fa-plus"></i> Tambah Mahasiswa
                 </button>
             </div>
 
-            <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative overflow-hidden">
+            <div className="bg-white rounded-3xl lg:rounded-[3rem] p-6 lg:p-10 shadow-sm border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 relative z-10">
                     <h3 className="text-xl font-black text-slate-800 uppercase italic">Mahasiswa Aktif</h3>
-                    <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto max-w-full">
                         {['TI-A', 'TI-B', 'TI-C'].map(k => (
-                            <button 
+                            <button
                                 key={k}
-                                onClick={() => setActiveClass(k)} 
-                                className={`px-8 py-2 rounded-xl text-[10px] font-black transition uppercase ${activeClass === k ? 'bg-white shadow-sm text-indigo-600' : 'hover:bg-white/50 text-slate-500'}`}
+                                onClick={() => setActiveClass(k)}
+                                className={`px-6 lg:px-8 py-2 rounded-xl text-[10px] font-black transition uppercase whitespace-nowrap ${activeClass === k ? 'bg-white shadow-sm text-indigo-600' : 'hover:bg-white/50 text-slate-500'}`}
                             >
                                 {k}
                             </button>
                         ))}
                     </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 relative z-10">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 relative z-10">
                     {renderMhsList()}
                 </div>
             </div>
@@ -169,23 +169,23 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                             <h3 className="text-2xl font-extrabold text-slate-800 uppercase tracking-tighter">Data Baru</h3>
                             <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Registrasi Akun Mahasiswa</p>
                         </div>
-                        
+
                         <div className="space-y-4 mb-8">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-xs font-black text-indigo-600 mb-4 uppercase tracking-widest"><i className="fas fa-id-card mr-2"></i>Data Profil</p>
                                 <div className="space-y-3">
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">NIM</p>
-                                        <input required type="text" value={newMhs.nim} onChange={e => setNewMhs({...newMhs, nim: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: 09021182126001" />
+                                        <input required type="text" value={newMhs.nim} onChange={e => setNewMhs({ ...newMhs, nim: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: 09021182126001" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nama Lengkap</p>
-                                        <input required type="text" value={newMhs.nama_lengkap} onChange={e => setNewMhs({...newMhs, nama_lengkap: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nama Mahasiswa" />
+                                        <input required type="text" value={newMhs.nama_lengkap} onChange={e => setNewMhs({ ...newMhs, nama_lengkap: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nama Mahasiswa" />
                                     </div>
                                     <div className="flex gap-3">
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
-                                            <select value={newMhs.kelas} onChange={e => setNewMhs({...newMhs, kelas: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none text-sm">
+                                            <select value={newMhs.kelas} onChange={e => setNewMhs({ ...newMhs, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none text-sm">
                                                 <option value="TI-A">TI-A</option>
                                                 <option value="TI-B">TI-B</option>
                                                 <option value="TI-C">TI-C</option>
@@ -193,12 +193,12 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Angkatan</p>
-                                            <input required type="number" value={newMhs.angkatan} onChange={e => setNewMhs({...newMhs, angkatan: Number(e.target.value)})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" />
+                                            <input required type="number" value={newMhs.angkatan} onChange={e => setNewMhs({ ...newMhs, angkatan: Number(e.target.value) })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
                                 <p className="text-xs font-black text-indigo-600 mb-4 uppercase tracking-widest"><i className="fas fa-key mr-2"></i>Kredensial Login</p>
                                 <div className="space-y-3">
@@ -208,7 +208,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Password Awal</p>
-                                        <input required type="text" value={newMhs.password} onChange={e => setNewMhs({...newMhs, password: e.target.value})} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: Unsri123!" />
+                                        <input required type="text" value={newMhs.password} onChange={e => setNewMhs({ ...newMhs, password: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Misal: Unsri123!" />
                                     </div>
                                 </div>
                             </div>

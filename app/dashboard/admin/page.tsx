@@ -11,6 +11,7 @@ import KoreksiTab from './components/KoreksiTab';
 
 export default function AdminDashboard() {
     const [currentTab, setCurrentTab] = useState('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const getTitle = () => {
         if (currentTab === 'dashboard') return 'Dashboard Utama';
@@ -23,13 +24,18 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="flex min-h-screen p-4 gap-4 bg-[#f8fafc] text-slate-800 font-sans">
+        <div className="flex min-h-screen p-0 lg:p-4 gap-4 bg-[#f8fafc] text-slate-800 font-sans relative">
             {/* Sidebar */}
-            <AdminSidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+            <AdminSidebar 
+                currentTab={currentTab} 
+                setCurrentTab={(tab) => { setCurrentTab(tab); setIsSidebarOpen(false); }} 
+                isOpen={isSidebarOpen} 
+                setIsOpen={setIsSidebarOpen}
+            />
 
-            <main className="flex-1 flex flex-col gap-6 w-full max-w-full overflow-hidden">
+            <main className="flex-1 flex flex-col gap-6 w-full max-w-full overflow-hidden p-4 lg:p-0">
                 {/* Header */}
-                <AdminHeader title={getTitle()} />
+                <AdminHeader title={getTitle()} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
                 {currentTab === 'dashboard' && <DashboardTab setCurrentTab={setCurrentTab} />}
                 {currentTab === 'mhs' && <MahasiswaTab setCurrentTab={setCurrentTab} />}
