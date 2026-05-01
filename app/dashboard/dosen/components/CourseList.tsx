@@ -5,6 +5,7 @@ export interface Course {
   id: number;
   name: string;
   class: string;
+  sks: number;
   room: string;
   time: string;
   day: string;
@@ -30,7 +31,7 @@ export default function CourseList({ courses, onHistoryClick, onLaunchClick, onD
                     <div>
                         <div className="flex items-center gap-3 mb-1">
                             <h4 className="font-extrabold text-slate-800 uppercase text-lg tracking-tighter">{course.name}</h4>
-                            <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded tracking-widest uppercase">{course.class}</span>
+                            <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded tracking-widest uppercase">{course.sks} SKS</span>
                         </div>
                         <div className="flex gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             <span className="flex items-center gap-1"><FaClock className="text-indigo-400" /> {course.time}</span>

@@ -89,6 +89,7 @@ export default function DosenDashboard() {
                         id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
                         name: (j.matakuliah as any)?.nama_mk || 'Matkul',
                         class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
+                        sks: sksValue,
                         room: j.ruangan,
                         time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
                         day: j.hari,
@@ -200,7 +201,7 @@ export default function DosenDashboard() {
                             </button>
                             <div>
                                 <h3 className="text-3xl font-extrabold text-slate-800 tracking-tighter uppercase leading-none mb-2">{activeCourse?.name}</h3>
-                                <span className="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-md uppercase tracking-widest">{activeCourse?.class}</span>
+                                <span className="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-md uppercase tracking-widest">{activeCourse?.sks} SKS</span>
                             </div>
                         </div>
                         <div className="flex gap-4">
