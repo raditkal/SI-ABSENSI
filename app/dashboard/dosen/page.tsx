@@ -29,75 +29,80 @@ export default function DosenDashboard() {
             setIsLoading(true);
             
             // 1. Dapatkan Auth User saat ini
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            let { data: { user }, error: userError } = await supabase.auth.getUser();
             
+            // [Bypass Figma] - Matikan sementara agar plugin Figma bisa akses
+            /*
             if (userError || !user) {
               window.location.href = '/login'; // Redirect kalau belum login
               return;
             }
+            */
 
             // 2. Fetch Profil Dosen
-            const { data: dosen, error: dosenError } = await supabase
-              .from('dosen')
-              .select('id, nip, nama_lengkap')
-              .eq('user_id', user.id)
-              .single();
+            if (user) {
+              const { data: dosen, error: dosenError } = await supabase
+                .from('dosen')
+                .select('id, nip, nama_lengkap')
+                .eq('user_id', user.id)
+                .single();
 
-            if (dosenError || !dosen) {
-                console.error("Gagal fetch dosen:", dosenError);
-                setIsLoading(false);
-                return;
-            }
-            setDosenProfile(dosen);
+              if (dosenError || !dosen) {
+                  console.error("Gagal fetch dosen:", dosenError);
+                  setIsLoading(false);
+                  return;
+              }
+              setDosenProfile(dosen);
 
-            // 3. Fetch Mahasiswa (semua)
-            const { data: mhsData } = await supabase
-                .from('mahasiswa')
-                .select('id, nim, nama_lengkap')
-                .order('nama_lengkap');
-            
-            if (mhsData) {
-                setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap })));
-            }
+              // 3. Fetch Mahasiswa (semua)
+              const { data: mhsData } = await supabase
+                  .from('mahasiswa')
+                  .select('id, nim, nama_lengkap')
+                  .order('nama_lengkap');
+              
+              if (mhsData) {
+                  setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap })));
+              }
 
-            // 4. Fetch Jadwal (Hanya untuk Dosen yang sedang login)
-            const { data: jadwalData } = await supabase
-                .from('jadwal')
-                .select(`
-                    id,
-                    hari,
-                    jam_mulai,
-                    jam_selesai,
-                    ruangan,
-                    matakuliah(nama_mk, sks)
-                `)
-                .eq('id_dosen', dosen.id);
+              // 4. Fetch Jadwal (Hanya untuk Dosen yang sedang login)
+              const { data: jadwalData } = await supabase
+                  .from('jadwal')
+                  .select(`
+                      id,
+                      hari,
+                      jam_mulai,
+                      jam_selesai,
+                      ruangan,
+                      matakuliah(nama_mk, sks)
+                  `)
+                  .eq('id_dosen', dosen.id);
 
-            if (jadwalData) {
-                const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                const todayString = namaHari[new Date().getDay()];
-                let currentSks = 0;
+              if (jadwalData) {
+                  const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                  const todayString = namaHari[new Date().getDay()];
+                  let currentSks = 0;
 
-                // Konversi data supabase ke format Course
-                const formattedCourses: Course[] = jadwalData.map(j => {
-                    const sksValue = (j.matakuliah as any)?.sks || 0;
-                    if (j.hari === todayString) {
-                        currentSks += sksValue;
-                    }
+                  // Konversi data supabase ke format Course
+                  const formattedCourses: Course[] = jadwalData.map(j => {
+                      const sksValue = (j.matakuliah as any)?.sks || 0;
+                      if (j.hari === todayString) {
+                          currentSks += sksValue;
+                      }
 
-                    return {
-                        id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
-                        name: (j.matakuliah as any)?.nama_mk || 'Matkul',
-                        class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
-                        sks: sksValue,
-                        room: j.ruangan,
-                        time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
-                        day: j.hari,
-                        cap: 40 // Default capacity
-                    }
-                });
-                setCourses(formattedCourses);
-                setTotalSKS(currentSks);
+                      return {
+                          id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
+                          name: (j.matakuliah as any)?.nama_mk || 'Matkul',
+                          class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
+                          sks: sksValue,
+                          room: j.ruangan,
+                          time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
+                          day: j.hari,
+                          cap: 40 // Default capacity
+                      }
+                  });
+                  setCourses(formattedCourses);
+                  setTotalSKS(currentSks);
+              }
             }
             setIsLoading(false);
         };

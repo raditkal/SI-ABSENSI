@@ -20,47 +20,57 @@ export default function MahasiswaDashboard() {
       setIsLoading(true);
 
       // 1. Dapatkan Auth User saat ini
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      let { data: { user }, error: userError } = await supabase.auth.getUser();
       
+      // [Bypass Figma] - Matikan sementara agar plugin Figma bisa akses
+      if (!user) {
+        // user = { id: 'paste-user-id-disini' } as any; // Opsional: Isi ID beneran biar ada datanya
+        // return; 
+      }
+      
+      /* 
       if (userError || !user) {
         window.location.href = '/login'; // Redirect kalau belum login
         return;
       }
+      */
 
       // 2. Fetch Mahasiswa Info berdasarkan user_id
-      const { data: mahasiswa } = await supabase
-        .from('mahasiswa')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-        
-      if (mahasiswa) {
-        setStudentInfo(mahasiswa);
-        const studentId = mahasiswa.id;
+      if (user) {
+        const { data: mahasiswa } = await supabase
+          .from('mahasiswa')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (mahasiswa) {
+          setStudentInfo(mahasiswa);
+          const studentId = mahasiswa.id;
 
-        // 3. Fetch Matakuliah List and Associated Absensi
-        const { data: mkData } = await supabase.from('matakuliah').select('*');
-        const { data: absensiData } = await supabase
-            .from('absensi')
-            .select('pertemuan_ke, status, id_jadwal, jadwal(id_matakuliah)')
-            .eq('id_mahasiswa', studentId);
+          // 3. Fetch Matakuliah List and Associated Absensi
+          const { data: mkData } = await supabase.from('matakuliah').select('*');
+          const { data: absensiData } = await supabase
+              .from('absensi')
+              .select('pertemuan_ke, status, id_jadwal, jadwal(id_matakuliah)')
+              .eq('id_mahasiswa', studentId);
 
-        if (mkData) {
-            const mappedCourses = mkData.map((mk: any) => {
-                const absensForMk = absensiData 
-                    ? absensiData.filter((a: any) => a.jadwal?.id_matakuliah === mk.id)
-                    : [];
-                
-                return {
-                    id: mk.id,
-                    nama_mk: mk.nama_mk,
-                    absens: absensForMk.map((a: any) => ({
-                        pertemuan_ke: a.pertemuan_ke,
-                        status: a.status
-                    }))
-                };
-            });
-            setAttendanceData(mappedCourses);
+          if (mkData) {
+              const mappedCourses = mkData.map((mk: any) => {
+                  const absensForMk = absensiData 
+                      ? absensiData.filter((a: any) => a.jadwal?.id_matakuliah === mk.id)
+                      : [];
+                  
+                  return {
+                      id: mk.id,
+                      nama_mk: mk.nama_mk,
+                      absens: absensForMk.map((a: any) => ({
+                          pertemuan_ke: a.pertemuan_ke,
+                          status: a.status
+                      }))
+                  };
+              });
+              setAttendanceData(mappedCourses);
+          }
         }
       }
 
