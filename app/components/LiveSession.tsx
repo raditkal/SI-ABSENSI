@@ -42,15 +42,17 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
         // Tarik data saat pertama kali jalan
         fetchAttendance();
         
-        // Menggunakan Supabase Realtime untuk mendapatkan update instan tanpa polling
+        // Menggunakan Supabase Realtime untuk mendapatkan update instan
         const channel = supabase
             .channel(`live-attendance-${course.id}`)
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'absensi', filter: `id_jadwal=eq.${course.id}` },
-                () => {
-                    // Ketika ada data absen baru, tarik ulang data terbaru untuk mendapatkan info mahasiswa (JOIN)
-                    fetchAttendance();
+                { event: 'INSERT', schema: 'public', table: 'absensi' }, // Menghapus filter yang terlalu ketat
+                (payload) => {
+                    // Cek apakah data yang masuk sesuai dengan jadwal yang sedang dibuka
+                    if (payload.new.id_jadwal === course.id) {
+                        fetchAttendance();
+                    }
                 }
             )
             .subscribe();
