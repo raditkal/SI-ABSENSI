@@ -43,7 +43,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                         <div className="max-w-[240px]">
                             <Doughnut
                                 data={{
-                                    labels: ['TI-A', 'TI-B', 'TI-C'],
+                                    labels: ['L1', 'L2', 'L3'],
                                     datasets: [{ 
                                         data: [95, 88, 92], 
                                         backgroundColor: ['#6366f1', '#f59e0b', '#10b981'], 
@@ -62,15 +62,15 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                     </div>
                     <div className="w-full mt-8 grid grid-cols-3 gap-2">
                         <div className="text-center p-3 bg-indigo-50 rounded-2xl">
-                            <p className="text-[9px] font-black text-indigo-400 uppercase">TI-A</p>
+                            <p className="text-[9px] font-black text-indigo-400 uppercase">L1</p>
                             <p className="text-sm font-extrabold text-indigo-600">95%</p>
                         </div>
                         <div className="text-center p-3 bg-orange-50 rounded-2xl">
-                            <p className="text-[9px] font-black text-orange-400 uppercase">TI-B</p>
+                            <p className="text-[9px] font-black text-orange-400 uppercase">L2</p>
                             <p className="text-sm font-extrabold text-orange-600">88%</p>
                         </div>
                         <div className="text-center p-3 bg-emerald-50 rounded-2xl">
-                            <p className="text-[9px] font-black text-emerald-400 uppercase">TI-C</p>
+                            <p className="text-[9px] font-black text-emerald-400 uppercase">L3</p>
                             <p className="text-sm font-extrabold text-emerald-600">92%</p>
                         </div>
                     </div>

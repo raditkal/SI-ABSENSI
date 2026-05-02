@@ -100,7 +100,12 @@ export default function DosenDashboard() {
                     const finalStart = isRescheduledToday && j.reschedule_jam_mulai ? j.reschedule_jam_mulai : j.jam_mulai;
                     const finalEnd = isRescheduledToday && j.reschedule_jam_selesai ? j.reschedule_jam_selesai : j.jam_selesai;
 
-                    if (j.hari === todayString || isRescheduledToday) {
+                    // Hitung apakah hari ini jadwalnya (untuk memunculkan tombol Buka Sesi)
+                    const isOriginalDay = j.hari === todayString;
+                    const isMovedToOtherDay = j.reschedule_date && j.reschedule_date !== todayYMD;
+                    const isToday = (isOriginalDay && !isMovedToOtherDay) || isRescheduledToday;
+
+                    if (isToday) {
                         currentSks += sksValue;
                     }
 
@@ -114,7 +119,8 @@ export default function DosenDashboard() {
                         day: j.hari,
                         cap: 40,
                         // Tambahkan metadata tambahan untuk filter
-                        reschedule_date: j.reschedule_date
+                        reschedule_date: j.reschedule_date,
+                        isToday: isToday
                     } as Course & { reschedule_date?: string }
                 });
                   setCourses(formattedCourses);
@@ -201,7 +207,6 @@ export default function DosenDashboard() {
             return (isOriginalDay && !isMovedToOtherDay) || isMovedToToday;
         }
         
-        if (activeTab === 'upcoming') return c.day !== todayString;
         return true;
     });
 
@@ -256,16 +261,12 @@ export default function DosenDashboard() {
                     
                     <div className="flex gap-8 border-b border-slate-200 px-2 overflow-x-auto custom-scroll">
                         <button onClick={() => setActiveTab('today')} className={`relative pb-4 font-extrabold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap transition-colors ${activeTab === 'today' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                            Today
+                            Hari Ini
                             {activeTab === 'today' && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-indigo-600 border-b-2 border-indigo-600 rounded-t-sm" />}
                         </button>
                         <button onClick={() => setActiveTab('all')} className={`relative pb-4 font-extrabold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap transition-colors ${activeTab === 'all' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                            All Courses
+                            Semua Jadwal
                             {activeTab === 'all' && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-indigo-600 border-b-2 border-indigo-600 rounded-t-sm" />}
-                        </button>
-                        <button onClick={() => setActiveTab('upcoming')} className={`relative pb-4 font-extrabold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap transition-colors ${activeTab === 'upcoming' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                            Upcoming
-                            {activeTab === 'upcoming' && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-indigo-600 border-b-2 border-indigo-600 rounded-t-sm" />}
                         </button>
                     </div>
 

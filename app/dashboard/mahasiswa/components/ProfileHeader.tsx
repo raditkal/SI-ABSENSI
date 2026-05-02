@@ -13,7 +13,7 @@ interface ProfileHeaderProps {
 export default function ProfileHeader({ studentInfo }: ProfileHeaderProps) {
   const name = studentInfo?.nama_lengkap || "Nama Mahasiswa";
   const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const kelas = studentInfo?.kelas || "TI-X";
+  const kelas = studentInfo?.kelas || "L-X";
   const nim = studentInfo?.nim || "000000000";
   
   return (

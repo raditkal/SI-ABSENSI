@@ -71,7 +71,7 @@ export default function Navbar({ dosenName = 'Dosen' }: NavbarProps) {
                 {/* Desktop View */}
                 <div className="hidden lg:flex items-center gap-3">
                     <div className="text-right">
-                        <p className="text-[9px] font-black text-indigo-500 uppercase leading-none">Welcome back,</p>
+                        <p className="text-[9px] font-black text-indigo-500 uppercase leading-none">Selamat datang,</p>
                         <p className="text-xs font-extrabold text-slate-700">{dosenName}</p>
                     </div>
                     <button 

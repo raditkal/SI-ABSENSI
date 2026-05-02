@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaLayerGroup, FaHistory, FaClock, FaMapMarkerAlt } from "react-icons/fa";
+import { FaLayerGroup, FaHistory, FaClock, FaMapMarkerAlt, FaCalendarDay } from "react-icons/fa";
 
 export interface Course {
   id: number;
@@ -10,6 +10,7 @@ export interface Course {
   time: string;
   day: string;
   cap: number;
+  isToday?: boolean;
 }
 
 interface CourseListProps {
@@ -34,6 +35,7 @@ export default function CourseList({ courses, onHistoryClick, onLaunchClick, onD
                             <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded tracking-widest uppercase">{course.sks} SKS</span>
                         </div>
                         <div className="flex gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span className="flex items-center gap-1"><FaCalendarDay className="text-indigo-400" /> {course.day}</span>
                             <span className="flex items-center gap-1"><FaClock className="text-indigo-400" /> {course.time}</span>
                             <span className="flex items-center gap-1"><FaMapMarkerAlt className="text-indigo-400" /> {course.room}</span>
                         </div>
@@ -44,11 +46,13 @@ export default function CourseList({ courses, onHistoryClick, onLaunchClick, onD
                         <FaHistory className="text-sm" />
                     </button>
                     <button onClick={() => onDelayClick(course)} className="px-6 py-3 bg-amber-50 text-amber-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-100 transition-colors">
-                        Delay
+                        Tunda
                     </button>
-                    <button onClick={() => onLaunchClick(course)} className="px-8 py-3 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:-translate-y-0.5 hover:shadow-lg transition-transform">
-                        Launch Session
-                    </button>
+                    {course.isToday && (
+                        <button onClick={() => onLaunchClick(course)} className="px-8 py-3 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:-translate-y-0.5 hover:shadow-lg transition-transform">
+                            Buka Sesi
+                        </button>
+                    )}
                 </div>
             </div>
         ))}

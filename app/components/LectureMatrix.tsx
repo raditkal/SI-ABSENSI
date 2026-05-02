@@ -56,12 +56,12 @@ export default function LectureMatrix({ students, courseName, courseId }: { stud
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 text-[10px] text-slate-400 uppercase font-black tracking-[0.1em]">
                         <tr>
-                            <th className="p-8 sticky left-0 bg-white/95 backdrop-blur-md z-10 min-w-[250px]">Student Name</th>
+                            <th className="p-8 sticky left-0 bg-white/95 backdrop-blur-md z-10 min-w-[250px]">Nama Mahasiswa</th>
                             <th className="p-8 text-center min-w-[150px]">NIM</th>
                             {[...Array(16)].map((_, i) => (
                                 <th key={i} className="p-4 text-center min-w-[60px]">P{i + 1}</th>
                             ))}
-                            <th className="p-8 text-center bg-indigo-50/50 text-indigo-600 sticky right-0 backdrop-blur-md">Score</th>
+                            <th className="p-8 text-center bg-indigo-50/50 text-indigo-600 sticky right-0 backdrop-blur-md">Skor</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-[11px] font-semibold">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaUserPlus } from "react-icons/fa";
 import { supabase } from '../../../../lib/supabase'; // Import koneksi supabase
 
 interface MahasiswaTabProps {
@@ -15,7 +15,7 @@ interface MahasiswaData {
 }
 
 export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
-    const [activeClass, setActiveClass] = useState('TI-A');
+    const [activeClass, setActiveClass] = useState('L1');
     const [mahasiswaList, setMahasiswaList] = useState<MahasiswaData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -73,7 +73,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newMhs, setNewMhs] = useState({
         password: '',
-        nim: '', nama_lengkap: '', kelas: 'TI-A', angkatan: new Date().getFullYear()
+        nim: '', nama_lengkap: '', kelas: 'L1', angkatan: new Date().getFullYear()
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -140,9 +140,9 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 relative z-10">
-                    <h3 className="text-xl font-black text-slate-800 uppercase italic">Mahasiswa Aktif</h3>
+                    <h3 className="text-xl font-black text-slate-800 uppercase italic">Daftar Mahasiswa Aktif</h3>
                     <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto max-w-full">
-                        {['TI-A', 'TI-B', 'TI-C'].map(k => (
+                        {['L1', 'L2', 'L3'].map(k => (
                             <button
                                 key={k}
                                 onClick={() => setActiveClass(k)}
@@ -164,7 +164,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                     <form onSubmit={handleAddStudent} className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-[3rem] p-10 shadow-2xl border border-white max-h-[90vh] overflow-y-auto custom-scroll">
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
-                                <i className="fas fa-user-plus text-2xl"></i>
+                                <FaUserPlus className="text-2xl" />
                             </div>
                             <h3 className="text-2xl font-extrabold text-slate-800 uppercase tracking-tighter">Data Baru</h3>
                             <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Registrasi Akun Mahasiswa</p>
@@ -186,9 +186,9 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
                                             <select value={newMhs.kelas} onChange={e => setNewMhs({ ...newMhs, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none text-sm">
-                                                <option value="TI-A">TI-A</option>
-                                                <option value="TI-B">TI-B</option>
-                                                <option value="TI-C">TI-C</option>
+                                                <option value="L1">L1</option>
+                                                <option value="L2">L2</option>
+                                                <option value="L3">L3</option>
                                             </select>
                                         </div>
                                         <div className="flex-1">

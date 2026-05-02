@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaChalkboardTeacher } from "react-icons/fa";
 import { supabase } from '../../../../lib/supabase';
 
 interface DosenTabProps {
@@ -102,51 +102,36 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
             <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
 
-                <h3 className="text-xl font-black text-slate-800 mb-8 uppercase italic underline decoration-indigo-500 decoration-4 relative z-10">Direktori Dosen</h3>
+                <h3 className="text-xl font-black text-slate-800 mb-8 uppercase italic relative z-10">Daftar Dosen</h3>
 
-                <div className="overflow-x-auto relative z-10">
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-left">
-                            <tr>
-                                <th className="p-6 rounded-l-2xl">Dosen</th>
-                                <th className="p-6 rounded-r-2xl">NIP</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={2} className="p-10 text-center text-slate-400 font-bold text-sm">
-                                        <i className="fas fa-circle-notch animate-spin text-2xl text-indigo-500 mb-3 block"></i>
-                                        Memuat Data...
-                                    </td>
-                                </tr>
-                            ) : dosenList.length === 0 ? (
-                                <tr>
-                                    <td colSpan={2} className="p-10 text-center text-slate-400 font-bold text-sm">
-                                        Data dosen masih kosong di Supabase.
-                                    </td>
-                                </tr>
-                            ) : (
-                                dosenList.map((d) => (
-                                    <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                                        <td className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-black italic shadow-md">
-                                                    {d.nama_lengkap.charAt(0).toUpperCase()}
-                                                </div>
-                                                <span className="font-black text-slate-800 uppercase text-sm italic">
-                                                    {d.nama_lengkap} {d.gelar ? `, ${d.gelar}` : ''}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="p-6 font-bold text-slate-500 tracking-widest text-xs">
-                                            {d.nip}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="relative z-10">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center py-20 justify-center w-full">
+                            <i className="fas fa-circle-notch animate-spin text-4xl text-indigo-500 mb-4"></i>
+                            <p className="text-sm font-bold text-slate-500 animate-pulse">Memuat Data Dosen...</p>
+                        </div>
+                    ) : dosenList.length === 0 ? (
+                        <div className="flex flex-col items-center py-20 justify-center w-full text-center">
+                            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-slate-300 text-2xl opacity-50">
+                                👨‍🏫
+                            </div>
+                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Belum ada data dosen</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {dosenList.map((d) => (
+                                <div key={d.id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex flex-col items-center group hover:bg-white hover:border-indigo-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-black text-lg mb-4 shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+                                        {d.nama_lengkap.charAt(0).toUpperCase()}
+                                    </div>
+                                    <p className="text-[9px] font-black text-slate-800 uppercase text-center line-clamp-2 leading-tight h-8 flex items-center justify-center px-1">
+                                        {d.nama_lengkap}{d.gelar ? `, ${d.gelar}` : ''}
+                                    </p>
+                                    <p className="text-[8px] text-slate-500 bg-slate-200 px-2 py-0.5 rounded mt-3 font-bold tracking-widest">{d.nip}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -156,7 +141,7 @@ export default function DosenTab({ setCurrentTab }: DosenTabProps) {
                     <form onSubmit={handleAddDosen} className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-[3rem] p-10 shadow-2xl border border-white max-h-[90vh] overflow-y-auto custom-scroll">
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
-                                <i className="fas fa-chalkboard-teacher text-2xl"></i>
+                                <FaChalkboardTeacher className="text-2xl" />
                             </div>
                             <h3 className="text-2xl font-extrabold text-slate-800 uppercase tracking-tighter">Data Baru</h3>
                             <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Registrasi Akun Dosen</p>

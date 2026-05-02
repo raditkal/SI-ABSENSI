@@ -7,7 +7,18 @@ import { supabase } from '../../lib/supabase';
 export default function LiveSession({ course, onBack }: { course: any, onBack: () => void }) {
     const [isPresenting, setIsPresenting] = useState(false);
     const [attendanceCount, setAttendanceCount] = useState(0);
+    const [totalStudents, setTotalStudents] = useState(0);
     const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchTotalStudents = async () => {
+            const { count } = await supabase
+                .from('mahasiswa')
+                .select('*', { count: 'exact', head: true });
+            setTotalStudents(count || 0);
+        };
+        fetchTotalStudents();
+    }, []);
 
     useEffect(() => {
         if (!isPresenting || !course) return;
@@ -86,7 +97,7 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:-translate-x-1 transition-transform">
                         <FaArrowLeft />
                     </div>
-                    Back to Dashboard
+                    Kembali ke Dashboard
                 </button>
                 {isPresenting && (
                     <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full font-black text-[10px] uppercase">
@@ -109,11 +120,10 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                 </div>
                                 <h4 className="text-4xl font-extrabold text-slate-800 tracking-tighter uppercase mb-2">{course.name}</h4>
                                 <div className="flex justify-center gap-3 mb-10">
-                                    <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-widest">{course.class}</span>
                                     <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-widest">{course.room}</span>
                                 </div>
                                 <button onClick={() => setIsPresenting(true)} className="bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold px-12 py-5 flex items-center justify-center mx-auto rounded-2xl uppercase tracking-[0.2em] text-xs hover:shadow-lg transition-all">
-                                    <FaQrcode className="mr-3" /> Generate Access QR
+                                    <FaQrcode className="mr-3" /> Buat QR Akses Presensi
                                 </button>
                             </div>
                         ) : (
@@ -123,20 +133,20 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                 </div>
                                 <div className="flex-1 w-full space-y-6">
                                     <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
-                                        <p className="text-[10px] font-bold uppercase opacity-50 tracking-[0.2em] mb-4">Live Statistics</p>
+                                        <p className="text-[10px] font-bold uppercase opacity-50 tracking-[0.2em] mb-4">Statistik Langsung</p>
                                         <div className="flex items-baseline gap-3">
                                             <span className="text-7xl font-extrabold italic">{attendanceCount}</span>
-                                            <span className="text-xl font-medium opacity-30">/ {course.cap}</span>
+                                            <span className="text-xl font-medium opacity-30">/ {totalStudents}</span>
                                         </div>
                                         <div className="w-full bg-white/10 h-3 rounded-full mt-6 overflow-hidden">
                                             <div
                                                 className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
-                                                style={{ width: `${(Math.min(attendanceCount / course.cap, 1)) * 100}%` }}
+                                                style={{ width: `${(Math.min(attendanceCount / (totalStudents || 1), 1)) * 100}%` }}
                                             ></div>
                                         </div>
                                     </div>
                                     <button onClick={handleEndSession} className="w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-2 border-red-50 text-red-500 font-extrabold uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 hover:border-red-100 transition-all">
-                                        <FaPowerOff /> End Session
+                                        <FaPowerOff /> Akhiri Sesi Kelas
                                     </button>
                                 </div>
                             </div>
@@ -147,13 +157,13 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                 {/* Recent Activity Feed */}
                 <div className="lg:col-span-4 glass rounded-[3rem] p-6 shadow-xl shadow-slate-200/50 flex flex-col h-[600px]">
                     <h5 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 px-2 flex justify-between items-center">
-                        Recent Activity <FaBolt className="text-amber-400" />
+                        Aktivitas Terbaru <FaBolt className="text-amber-400" />
                     </h5>
                     <div className="flex-1 overflow-y-auto custom-scroll space-y-4 px-2">
                         {recentAttendees.length === 0 ? (
                             <div className="text-center py-20 opacity-20">
                                 <div className="text-4xl mb-4 animate-pulse uppercase">...</div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest">Waiting for entries...</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest">Menunggu data masuk...</p>
                             </div>
                         ) : (
                             recentAttendees.map((att, idx) => (
@@ -167,7 +177,7 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                             {att.mahasiswa?.nim} • {new Date(att.waktu_absen).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
-                                    <div className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">VERIFIED</div>
+                                    <div className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">TERVERIFIKASI</div>
                                 </div>
                             ))
                         )}
