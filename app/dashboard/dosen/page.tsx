@@ -6,12 +6,13 @@ import { FaArrowLeft, FaClock, FaCalendarDay } from "react-icons/fa";
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import CourseList, { Course } from './components/CourseList';
+import IzinTab from './components/IzinTab';
 import { supabase } from '../../../lib/supabase';
 
 export default function DosenDashboard() {
     const [view, setView] = useState<'main' | 'live' | 'history'>('main');
     const [activeCourse, setActiveCourse] = useState<Course | null>(null);
-    const [activeTab, setActiveTab] = useState<'today'|'all'|'upcoming'>('today');
+    const [activeTab, setActiveTab] = useState<'today'|'all'|'upcoming'|'perizinan'>('today');
     const [rescheduleCourse, setRescheduleCourse] = useState<Course | null>(null);
 
     const [courses, setCourses] = useState<Course[]>([]);
@@ -91,7 +92,10 @@ export default function DosenDashboard() {
                     
                     // Ambil info hari ini
                     const now = new Date();
-                    const todayYMD = now.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const todayYMD = `${year}-${month}-${day}`; // Format YYYY-MM-DD
                     
                     // Cek apakah ada reschedule untuk HARI INI
                     const isRescheduledToday = j.reschedule_date === todayYMD;
@@ -139,6 +143,19 @@ export default function DosenDashboard() {
     };
 
     const handleLaunchClick = (course: Course) => {
+        // Validasi Jam: Hanya bisa buka jika sudah masuk jamnya
+        const now = new Date();
+        const timeNow = now.getHours() * 60 + now.getMinutes();
+
+        const [startPart] = course.time.split(' - ');
+        const [h1, m1] = startPart.split(':').map(Number);
+        const startTime = h1 * 60 + m1;
+
+        if (timeNow < startTime) {
+            alert(`Sesi belum bisa dimulai. Jadwal mulai pada jam ${startPart}.`);
+            return;
+        }
+
         setActiveCourse(course);
         setView('live');
     };
@@ -194,7 +211,10 @@ export default function DosenDashboard() {
         const now = new Date();
         const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const todayString = namaHari[now.getDay()];
-        const todayYMD = now.toISOString().split('T')[0];
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayYMD = `${year}-${month}-${day}`;
 
         if (activeTab === 'today') {
             // Tampilkan jika:
@@ -268,21 +288,31 @@ export default function DosenDashboard() {
                             Semua Jadwal
                             {activeTab === 'all' && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-indigo-600 border-b-2 border-indigo-600 rounded-t-sm" />}
                         </button>
+                        <button onClick={() => setActiveTab('perizinan')} className={`relative pb-4 font-extrabold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap transition-colors ${activeTab === 'perizinan' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                            Izin Mahasiswa
+                            {activeTab === 'perizinan' && <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-indigo-600 border-b-2 border-indigo-600 rounded-t-sm" />}
+                        </button>
                     </div>
 
-                    {courses.length === 0 ? (
-                        <div className="bg-white rounded-[3rem] p-12 text-center shadow-sm">
-                            <span className="text-4xl">📚</span>
-                            <h3 className="mt-4 font-extrabold text-slate-800">BELUM ADA JADWAL</h3>
-                            <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto mt-2">Dosen ini belum memiliki rincian jadwal yang terdaftar pada database Supabase.</p>
-                        </div>
+                    {activeTab !== 'perizinan' ? (
+                        courses.length === 0 ? (
+                            <div className="bg-white rounded-[3rem] p-12 text-center shadow-sm">
+                                <span className="text-4xl">📚</span>
+                                <h3 className="mt-4 font-extrabold text-slate-800">BELUM ADA JADWAL</h3>
+                                <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto mt-2">Dosen ini belum memiliki rincian jadwal yang terdaftar pada database Supabase.</p>
+                            </div>
+                        ) : (
+                            <CourseList 
+                                courses={filteredCourses} 
+                                onHistoryClick={handleHistoryClick} 
+                                onLaunchClick={handleLaunchClick} 
+                                onDelayClick={(course) => setRescheduleCourse(course)}
+                            />
+                        )
                     ) : (
-                        <CourseList 
-                            courses={filteredCourses} 
-                            onHistoryClick={handleHistoryClick} 
-                            onLaunchClick={handleLaunchClick} 
-                            onDelayClick={(course) => setRescheduleCourse(course)}
-                        />
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <IzinTab dosenId={dosenProfile?.id} />
+                        </div>
                     )}
                 </main>
             )}
