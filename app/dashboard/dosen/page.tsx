@@ -114,7 +114,7 @@ export default function DosenDashboard() {
                     }
 
                     return {
-                        id: j.id as unknown as number,
+                        id: j.id,
                         name: (j.matakuliah as any)?.nama_mk || 'Matkul',
                         class: 'REGULER',
                         sks: sksValue,

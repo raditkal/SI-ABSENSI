@@ -2,7 +2,7 @@ import React from 'react';
 import { FaLayerGroup, FaHistory, FaClock, FaMapMarkerAlt, FaCalendarDay } from "react-icons/fa";
 
 export interface Course {
-  id: number;
+  id: any;
   name: string;
   class: string;
   sks: number;
