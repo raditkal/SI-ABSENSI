@@ -37,9 +37,11 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
           .channel(`live-status-${initialSchedule.id}`)
           .on(
               'postgres_changes',
-              { event: 'UPDATE', schema: 'public', table: 'jadwal', filter: `id=eq.${initialSchedule.id}` },
+              { event: 'UPDATE', schema: 'public', table: 'jadwal' },
               (payload) => {
-                  setSchedule(prev => prev ? { ...prev, is_live: payload.new.is_live } : prev);
+                  if (payload.new.id === initialSchedule.id) {
+                      setSchedule(prev => prev ? { ...prev, is_live: payload.new.is_live } : prev);
+                  }
               }
           )
           .subscribe();
