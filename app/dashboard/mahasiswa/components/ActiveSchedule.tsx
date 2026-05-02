@@ -10,6 +10,7 @@ interface ActiveScheduleProps {
     jam_mulai: string;
     jam_selesai: string;
     ruangan: string;
+    is_live: boolean;
   };
   studentInfo?: {
     id: string;
@@ -17,13 +18,43 @@ interface ActiveScheduleProps {
   };
 }
 
-export default function ActiveSchedule({ schedule, studentInfo }: ActiveScheduleProps) {
+export default function ActiveSchedule({ schedule: initialSchedule, studentInfo }: ActiveScheduleProps) {
+  const [schedule, setSchedule] = useState(initialSchedule);
   const [isScanning, setIsScanning] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Update local state if prop changes
+  React.useEffect(() => {
+    setSchedule(initialSchedule);
+  }, [initialSchedule]);
+
+  // Real-time listener for is_live status
+  React.useEffect(() => {
+      if (!initialSchedule?.id) return;
+
+      const channel = supabase
+          .channel(`live-status-${initialSchedule.id}`)
+          .on(
+              'postgres_changes',
+              { event: 'UPDATE', schema: 'public', table: 'jadwal', filter: `id=eq.${initialSchedule.id}` },
+              (payload) => {
+                  setSchedule(prev => prev ? { ...prev, is_live: payload.new.is_live } : prev);
+              }
+          )
+          .subscribe();
+
+      return () => {
+          supabase.removeChannel(channel);
+      };
+  }, [initialSchedule?.id]);
+
   const handleScan = async () => {
       if (!schedule || !studentInfo) return;
+      if (!schedule.is_live) {
+          setErrorMsg("Sesi belum dibuka oleh dosen.");
+          return;
+      }
       setIsScanning(true);
       setErrorMsg('');
 
@@ -137,6 +168,10 @@ export default function ActiveSchedule({ schedule, studentInfo }: ActiveSchedule
             {success ? (
                 <div className="bg-emerald-50 text-emerald-600 px-10 py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] shadow-xl flex items-center gap-3 animate-in zoom-in duration-300">
                     <FaCheckCircle className="text-lg" /> Berhasil Absen
+                </div>
+            ) : !schedule?.is_live ? (
+                <div className="bg-white/20 text-white/60 px-10 py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] border-2 border-white/10 flex items-center gap-3 cursor-not-allowed">
+                    <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse"></div> Menunggu Sesi Dibuka
                 </div>
             ) : (
                 <button 

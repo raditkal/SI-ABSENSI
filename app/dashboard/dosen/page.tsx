@@ -58,7 +58,7 @@ export default function DosenDashboard() {
               const { data: mhsData } = await supabase
                   .from('mahasiswa')
                   .select('id, nim, nama_lengkap')
-                  .order('nama_lengkap');
+                  .order('nim', { ascending: true });
               
               if (mhsData) {
                   setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap })));
@@ -68,13 +68,16 @@ export default function DosenDashboard() {
               const { data: jadwalData } = await supabase
                   .from('jadwal')
                   .select(`
-                      id,
-                      hari,
-                      jam_mulai,
-                      jam_selesai,
-                      ruangan,
-                      matakuliah(nama_mk, sks)
-                  `)
+                    id,
+                    hari,
+                    jam_mulai,
+                    jam_selesai,
+                    ruangan,
+                    matakuliah(nama_mk, sks),
+                    reschedule_date,
+                    reschedule_jam_mulai,
+                    reschedule_jam_selesai
+                `)
                   .eq('id_dosen', dosen.id);
 
               if (jadwalData) {
@@ -83,23 +86,37 @@ export default function DosenDashboard() {
                   let currentSks = 0;
 
                   // Konversi data supabase ke format Course
-                  const formattedCourses: Course[] = jadwalData.map(j => {
-                      const sksValue = (j.matakuliah as any)?.sks || 0;
-                      if (j.hari === todayString) {
-                          currentSks += sksValue;
-                      }
+                const formattedCourses: Course[] = jadwalData.map(j => {
+                    const sksValue = (j.matakuliah as any)?.sks || 0;
+                    
+                    // Ambil info hari ini
+                    const now = new Date();
+                    const todayYMD = now.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                    
+                    // Cek apakah ada reschedule untuk HARI INI
+                    const isRescheduledToday = j.reschedule_date === todayYMD;
+                    
+                    // Gunakan jam reschedule jika ada, jika tidak gunakan jam asli
+                    const finalStart = isRescheduledToday && j.reschedule_jam_mulai ? j.reschedule_jam_mulai : j.jam_mulai;
+                    const finalEnd = isRescheduledToday && j.reschedule_jam_selesai ? j.reschedule_jam_selesai : j.jam_selesai;
 
-                      return {
-                          id: j.id as unknown as number, // Using any here because original had number, but in DB it's UUID string
-                          name: (j.matakuliah as any)?.nama_mk || 'Matkul',
-                          class: 'REGULER', // Kelas belum ada di jadwal, default REGULER
-                          sks: sksValue,
-                          room: j.ruangan,
-                          time: `${j.jam_mulai.slice(0,5)} - ${j.jam_selesai.slice(0,5)}`,
-                          day: j.hari,
-                          cap: 40 // Default capacity
-                      }
-                  });
+                    if (j.hari === todayString || isRescheduledToday) {
+                        currentSks += sksValue;
+                    }
+
+                    return {
+                        id: j.id as unknown as number,
+                        name: (j.matakuliah as any)?.nama_mk || 'Matkul',
+                        class: 'REGULER',
+                        sks: sksValue,
+                        room: j.ruangan,
+                        time: `${finalStart.slice(0,5)} - ${finalEnd.slice(0,5)}`,
+                        day: j.hari,
+                        cap: 40,
+                        // Tambahkan metadata tambahan untuk filter
+                        reschedule_date: j.reschedule_date
+                    } as Course & { reschedule_date?: string }
+                });
                   setCourses(formattedCourses);
                   setTotalSKS(currentSks);
               }
@@ -138,13 +155,13 @@ export default function DosenDashboard() {
         const endTime = `${endHours}:${minutes === '00' ? '30' : minutes}:00`; 
         const startTime = `${newTime}:00`;
 
-        // 3. Update data jadwal di Supabase
+        // 3. Update data reschedule di Supabase (TIDAK mengubah kolom hari/jam asli)
         const { error } = await supabase
             .from('jadwal')
             .update({
-                hari: dayString,
-                jam_mulai: startTime,
-                jam_selesai: endTime
+                reschedule_date: newDate,
+                reschedule_jam_mulai: startTime,
+                reschedule_jam_selesai: endTime
             })
             .eq('id', rescheduleCourse.id);
 
@@ -168,10 +185,22 @@ export default function DosenDashboard() {
     };
 
     const filteredCourses = courses.filter(c => {
+        const now = new Date();
         const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        const todayString = namaHari[new Date().getDay()]; // Mendapatkan hari sistem secara dinamis
+        const todayString = namaHari[now.getDay()];
+        const todayYMD = now.toISOString().split('T')[0];
+
+        if (activeTab === 'today') {
+            // Tampilkan jika:
+            // 1. Hari ini adalah hari jadwal aslinya DAN tidak sedang di-reschedule ke tanggal lain
+            // 2. ATAU Hari ini adalah tanggal reschedule-nya
+            const isOriginalDay = c.day === todayString;
+            const isMovedToToday = (c as any).reschedule_date === todayYMD;
+            const isMovedToOtherDay = (c as any).reschedule_date && (c as any).reschedule_date !== todayYMD;
+
+            return (isOriginalDay && !isMovedToOtherDay) || isMovedToToday;
+        }
         
-        if (activeTab === 'today') return c.day === todayString;
         if (activeTab === 'upcoming') return c.day !== todayString;
         return true;
     });

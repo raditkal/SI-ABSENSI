@@ -74,11 +74,14 @@ export default function MahasiswaDashboard() {
         }
       }
 
-      // 3. Cari Jadwal yang AKTIF saat ini (Berdasarkan Hari & Jam)
+      // 3. Cari Jadwal yang AKTIF saat ini (Berdasarkan Hari & Jam + Reschedule)
+      const now = new Date();
       const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-      const todayName = namaHari[new Date().getDay()];
+      const todayName = namaHari[now.getDay()];
+      const todayYMD = now.toISOString().split('T')[0];
 
-      const { data: allToday } = await supabase
+      // Ambil semua jadwal yang mungkin relevan (hari ini asli atau hari ini reschedule)
+      const { data: allPotential } = await supabase
         .from('jadwal')
         .select(`
             id,
@@ -86,12 +89,33 @@ export default function MahasiswaDashboard() {
             jam_mulai,
             jam_selesai,
             ruangan,
-            matakuliah(nama_mk)
+            matakuliah(nama_mk),
+            reschedule_date,
+            reschedule_jam_mulai,
+            reschedule_jam_selesai,
+            is_live
         `)
-        .eq('hari', todayName);
+        .or(`hari.eq.${todayName},reschedule_date.eq.${todayYMD}`);
 
-      if (allToday) {
-        setTodaySchedules(allToday);
+      if (allPotential) {
+        const filtered = allPotential.filter(j => {
+            const isOriginalDay = j.hari === todayName;
+            const isMovedToToday = j.reschedule_date === todayYMD;
+            const isMovedToOtherDay = j.reschedule_date && j.reschedule_date !== todayYMD;
+
+            // Tampilkan jika hari ini hari aslinya (dan tidak dipindah) ATAU memang dipindah ke hari ini
+            return (isOriginalDay && !isMovedToOtherDay) || isMovedToToday;
+        }).map(j => {
+            // Gunakan jam reschedule jika sedang di-reschedule ke hari ini
+            const isRescheduledToday = j.reschedule_date === todayYMD;
+            return {
+                ...j,
+                jam_mulai: isRescheduledToday && j.reschedule_jam_mulai ? j.reschedule_jam_mulai : j.jam_mulai,
+                jam_selesai: isRescheduledToday && j.reschedule_jam_selesai ? j.reschedule_jam_selesai : j.jam_selesai
+            };
+        });
+
+        setTodaySchedules(filtered);
       }
       
       setIsLoading(false);

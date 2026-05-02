@@ -49,10 +49,40 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
         };
     }, [isPresenting, course]);
 
+    // Efek untuk mengaktifkan status 'is_live' di database saat sesi dimulai
+    useEffect(() => {
+        const updateLiveStatus = async (status: boolean) => {
+            if (!course?.id) return;
+            await supabase
+                .from('jadwal')
+                .update({ is_live: status })
+                .eq('id', course.id);
+        };
+
+        if (isPresenting) {
+            updateLiveStatus(true);
+        }
+
+        // Cleanup: Saat komponen di-unmount atau sesi berakhir
+        return () => {
+            updateLiveStatus(false);
+        };
+    }, [isPresenting, course?.id]);
+
+    const handleEndSession = async () => {
+        if (course?.id) {
+            await supabase
+                .from('jadwal')
+                .update({ is_live: false })
+                .eq('id', course.id);
+        }
+        onBack();
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-8">
-                <button onClick={onBack} className="group flex items-center gap-3 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600 transition-all">
+                <button onClick={handleEndSession} className="group flex items-center gap-3 text-slate-500 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600 transition-all">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:-translate-x-1 transition-transform">
                         <FaArrowLeft />
                     </div>
@@ -105,7 +135,7 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                             ></div>
                                         </div>
                                     </div>
-                                    <button onClick={onBack} className="w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-2 border-red-50 text-red-500 font-extrabold uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 hover:border-red-100 transition-all">
+                                    <button onClick={handleEndSession} className="w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-2 border-red-50 text-red-500 font-extrabold uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 hover:border-red-100 transition-all">
                                         <FaPowerOff /> End Session
                                     </button>
                                 </div>
