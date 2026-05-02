@@ -47,17 +47,21 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
             .channel(`live-attendance-${course.id}`)
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'absensi' }, // Menghapus filter yang terlalu ketat
-                (payload) => {
-                    // Cek apakah data yang masuk sesuai dengan jadwal yang sedang dibuka
-                    if (payload.new.id_jadwal === course.id) {
+                { event: 'INSERT', schema: 'public', table: 'absensi' },
+                (payload: any) => {
+                    console.log("Ada Mahasiswa Absen!", payload.new);
+                    // Gunakan perbandingan yang lebih fleksibel
+                    if (String(payload.new.id_jadwal) === String(course.id)) {
                         fetchAttendance();
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log("Status Koneksi Realtime:", status);
+            });
 
         return () => {
+            console.log("Menutup koneksi Realtime...");
             supabase.removeChannel(channel);
         };
     }, [isPresenting, course]);
