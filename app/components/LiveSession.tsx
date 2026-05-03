@@ -4,39 +4,57 @@ import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaArrowLeft, FaWifi, FaBolt, FaQrcode, FaPowerOff } from "react-icons/fa";
 import { supabase } from '../../lib/supabase';
-import { useAttendanceStore } from '../../lib/store/useAttendanceStore';
-
 export default function LiveSession({ course, onBack, initialIsPresenting = false }: { course: any, onBack: () => void, initialIsPresenting?: boolean }) {
     const router = useRouter();
     const [isPresenting, setIsPresenting] = useState(initialIsPresenting);
     
-    // Zustand Store
-    const { 
-        recentAttendees, 
-        attendanceCount, 
-        totalStudents, 
-        fetchTotalStudents, 
-        fetchAttendance,
-        subscribeToAttendance,
-        reset 
-    } = useAttendanceStore();
+    // Local State
+    const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
+    const [attendanceCount, setAttendanceCount] = useState(0);
+    const [totalStudents, setTotalStudents] = useState(0);
 
+    // Ambil total mahasiswa (cukup sekali)
     useEffect(() => {
+        const fetchTotalStudents = async () => {
+            const { count } = await supabase
+                .from('mahasiswa')
+                .select('*', { count: 'exact', head: true });
+            setTotalStudents(count || 0);
+        };
         fetchTotalStudents();
-        return () => reset(); 
     }, []);
 
+    // POLLING: Tarik data otomatis setiap 3 detik
     useEffect(() => {
         if (!isPresenting || !course?.id) return;
 
-        // Tarik data awal
-        fetchAttendance(course.id);
-        
-        // Panggil subscription dari Store
-        const unsubscribe = subscribeToAttendance(course.id);
+        const fetchAttendance = async () => {
+            const { data, error } = await supabase
+                .from('absensi')
+                .select(`
+                    waktu_absen,
+                    mahasiswa (nim, nama_lengkap)
+                `)
+                .eq('id_jadwal', course.id)
+                .order('waktu_absen', { ascending: false });
 
+            if (!error && data) {
+                setRecentAttendees(data);
+                setAttendanceCount(data.length);
+            }
+        };
+
+        // 1. Tarik data awal saat QR Code muncul
+        fetchAttendance();
+        
+        // 2. Buat interval untuk menarik data berulang kali (Polling)
+        const intervalId = setInterval(() => {
+            fetchAttendance();
+        }, 3000); // 3000 ms = 3 detik
+
+        // 3. Bersihkan interval jika Dosen keluar atau Sesi ditutup
         return () => {
-            unsubscribe();
+            clearInterval(intervalId);
         };
     }, [isPresenting, course?.id]);
 

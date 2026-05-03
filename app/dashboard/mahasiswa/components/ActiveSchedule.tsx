@@ -29,25 +29,38 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
     setSchedule(initialSchedule);
   }, [initialSchedule]);
 
-  // Real-time listener for is_live status
+  // POLLING: Cek status is_live setiap 3 detik
   React.useEffect(() => {
       if (!initialSchedule?.id) return;
 
-      const channel = supabase
-          .channel(`live-status-${initialSchedule.id}`)
-          .on(
-              'postgres_changes',
-              { event: 'UPDATE', schema: 'public', table: 'jadwal' },
-              (payload) => {
-                  if (payload.new.id === initialSchedule.id) {
-                      setSchedule(prev => prev ? { ...prev, is_live: payload.new.is_live } : prev);
+      const checkLiveStatus = async () => {
+          const { data, error } = await supabase
+              .from('jadwal')
+              .select('is_live')
+              .eq('id', initialSchedule.id)
+              .single();
+
+          if (!error && data) {
+              setSchedule(prev => {
+                  // Hanya update state jika statusnya benar-benar berubah untuk menghindari re-render yang tidak perlu
+                  if (prev && prev.is_live !== data.is_live) {
+                      return { ...prev, is_live: data.is_live };
                   }
-              }
-          )
-          .subscribe();
+                  return prev;
+              });
+          }
+      };
+
+      // Cek pertama kali
+      checkLiveStatus();
+
+      // Mulai interval
+      const intervalId = setInterval(() => {
+          checkLiveStatus();
+      }, 3000); // Cek setiap 3 detik
 
       return () => {
-          supabase.removeChannel(channel);
+          clearInterval(intervalId);
       };
   }, [initialSchedule?.id]);
 
