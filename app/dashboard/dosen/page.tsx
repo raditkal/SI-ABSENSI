@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import LectureMatrix from '../../components/LectureMatrix';
 import LiveSession from '../../components/LiveSession';
 import { FaArrowLeft, FaClock, FaCalendarDay } from "react-icons/fa";
@@ -10,8 +11,9 @@ import IzinTab from './components/IzinTab';
 import { supabase } from '../../../lib/supabase';
 
 export default function DosenDashboard() {
-    const [view, setView] = useState<'main' | 'live' | 'history'>('main');
+    const [view, setView] = useState<'main' | 'history'>('main');
     const [activeCourse, setActiveCourse] = useState<Course | null>(null);
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'today'|'all'|'upcoming'|'perizinan'>('today');
     const [rescheduleCourse, setRescheduleCourse] = useState<Course | null>(null);
 
@@ -152,14 +154,14 @@ export default function DosenDashboard() {
         const [h1, m1] = startPart.split(':').map(Number);
         const startTime = h1 * 60 + m1;
 
+        /*
         if (timeNow < startTime) {
             alert(`Sesi belum bisa dimulai. Jadwal mulai pada jam ${startPart}.`);
             return;
         }
         */
 
-        setActiveCourse(course);
-        setView('live');
+        router.push(`/dashboard/dosen/sesi/${course.id}`);
     };
 
     const handleRescheduleSubmit = async () => {
@@ -247,12 +249,6 @@ export default function DosenDashboard() {
 
             <Navbar dosenName={dosenProfile?.nama_lengkap} />
             
-            {view === 'live' && (
-                <main className="p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <LiveSession course={activeCourse} onBack={() => setView('main')} />
-                </main>
-            )}
-
             {view === 'history' && (
                 <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pt-8">
