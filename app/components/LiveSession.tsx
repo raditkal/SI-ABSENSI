@@ -17,12 +17,13 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         totalStudents, 
         fetchTotalStudents, 
         fetchAttendance,
+        subscribeToAttendance,
         reset 
     } = useAttendanceStore();
 
     useEffect(() => {
         fetchTotalStudents();
-        return () => reset(); // Reset saat keluar
+        return () => reset(); 
     }, []);
 
     useEffect(() => {
@@ -31,26 +32,11 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         // Tarik data awal
         fetchAttendance(course.id);
         
-        // Menggunakan Supabase Realtime
-        const channel = supabase
-            .channel(`live-attendance-${course.id}`)
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'absensi' },
-                (payload: any) => {
-                    console.log("Realtime Insert Detected:", payload.new);
-                    if (String(payload.new.id_jadwal) === String(course.id)) {
-                        // Langsung fetch ulang agar data JOIN mahasiswa (nama) terbawa
-                        fetchAttendance(course.id);
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log("Status Realtime:", status);
-            });
+        // Panggil subscription dari Store
+        const unsubscribe = subscribeToAttendance(course.id);
 
         return () => {
-            supabase.removeChannel(channel);
+            unsubscribe();
         };
     }, [isPresenting, course?.id]);
 

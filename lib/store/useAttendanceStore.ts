@@ -10,6 +10,7 @@ interface AttendanceState {
   // Actions
   fetchTotalStudents: () => Promise<void>;
   fetchAttendance: (courseId: string) => Promise<void>;
+  subscribeToAttendance: (courseId: string) => () => void;
   addAttendee: (newAttendee: any) => void;
   reset: () => void;
 }
@@ -52,11 +53,42 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
   },
 
   addAttendee: (newAttendee: any) => {
-    // Menambahkan attendee baru ke daftar tanpa fetch ulang (optimistic/instant)
     set((state) => ({
       recentAttendees: [newAttendee, ...state.recentAttendees],
       attendanceCount: state.attendanceCount + 1
     }));
+  },
+
+  subscribeToAttendance: (courseId: string) => {
+    if (!courseId) return () => {};
+
+    console.log(`[Store] Memulai Subscription untuk Jadwal: ${courseId}`);
+    
+    const channel = supabase
+      .channel(`live-attendance-${courseId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'absensi' },
+        async (payload: any) => {
+          console.log("[Store] Event INSERT Terdeteksi:", payload.new);
+          
+          if (String(payload.new.id_jadwal) === String(courseId)) {
+            // Beri jeda sedikit agar database selesai memproses JOIN dengan benar
+            setTimeout(() => {
+              console.log("[Store] Menarik ulang data absensi...");
+              get().fetchAttendance(courseId);
+            }, 500);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[Store] Status Realtime (${courseId}):`, status);
+      });
+
+    return () => {
+      console.log(`[Store] Menutup Subscription: ${courseId}`);
+      supabase.removeChannel(channel);
+    };
   },
 
   reset: () => {
