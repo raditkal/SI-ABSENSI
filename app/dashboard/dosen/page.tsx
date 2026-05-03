@@ -143,7 +143,8 @@ export default function DosenDashboard() {
     };
 
     const handleLaunchClick = (course: Course) => {
-        // Validasi Jam: Hanya bisa buka jika sudah masuk jamnya
+        // [BYPASS UNTUK TESTING] - Diaktifkan agar bisa testing kapan saja
+        /*
         const now = new Date();
         const timeNow = now.getHours() * 60 + now.getMinutes();
 
@@ -155,6 +156,7 @@ export default function DosenDashboard() {
             alert(`Sesi belum bisa dimulai. Jadwal mulai pada jam ${startPart}.`);
             return;
         }
+        */
 
         setActiveCourse(course);
         setView('live');
