@@ -4,69 +4,55 @@ import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaArrowLeft, FaWifi, FaBolt, FaQrcode, FaPowerOff } from "react-icons/fa";
 import { supabase } from '../../lib/supabase';
+import { useAttendanceStore } from '../../lib/store/useAttendanceStore';
 
 export default function LiveSession({ course, onBack, initialIsPresenting = false }: { course: any, onBack: () => void, initialIsPresenting?: boolean }) {
     const router = useRouter();
     const [isPresenting, setIsPresenting] = useState(initialIsPresenting);
-    const [attendanceCount, setAttendanceCount] = useState(0);
-    const [totalStudents, setTotalStudents] = useState(0);
-    const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
+    
+    // Zustand Store
+    const { 
+        recentAttendees, 
+        attendanceCount, 
+        totalStudents, 
+        fetchTotalStudents, 
+        fetchAttendance,
+        reset 
+    } = useAttendanceStore();
 
     useEffect(() => {
-        const fetchTotalStudents = async () => {
-            const { count } = await supabase
-                .from('mahasiswa')
-                .select('*', { count: 'exact', head: true });
-            setTotalStudents(count || 0);
-        };
         fetchTotalStudents();
+        return () => reset(); // Reset saat keluar
     }, []);
 
     useEffect(() => {
-        if (!isPresenting || !course) return;
+        if (!isPresenting || !course?.id) return;
 
-        const fetchAttendance = async () => {
-            const { data, error } = await supabase
-                .from('absensi')
-                .select(`
-                    waktu_absen,
-                    mahasiswa (nim, nama_lengkap)
-                `)
-                .eq('id_jadwal', course.id)
-                .order('waktu_absen', { ascending: false });
-
-            if (!error && data) {
-                setRecentAttendees(data);
-                setAttendanceCount(data.length);
-            }
-        };
-
-        // Tarik data saat pertama kali jalan
-        fetchAttendance();
+        // Tarik data awal
+        fetchAttendance(course.id);
         
-        // Menggunakan Supabase Realtime untuk mendapatkan update instan
+        // Menggunakan Supabase Realtime
         const channel = supabase
             .channel(`live-attendance-${course.id}`)
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'absensi' },
                 (payload: any) => {
-                    console.log("Ada Mahasiswa Absen!", payload.new);
-                    // Gunakan perbandingan yang lebih fleksibel
+                    console.log("Realtime Insert Detected:", payload.new);
                     if (String(payload.new.id_jadwal) === String(course.id)) {
-                        fetchAttendance();
+                        // Langsung fetch ulang agar data JOIN mahasiswa (nama) terbawa
+                        fetchAttendance(course.id);
                     }
                 }
             )
             .subscribe((status) => {
-                console.log("Status Koneksi Realtime:", status);
+                console.log("Status Realtime:", status);
             });
 
         return () => {
-            console.log("Menutup koneksi Realtime...");
             supabase.removeChannel(channel);
         };
-    }, [isPresenting, course]);
+    }, [isPresenting, course?.id]);
 
     // Efek untuk mengaktifkan status 'is_live' di database saat sesi dimulai
     useEffect(() => {
@@ -184,7 +170,7 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
                                 <p className="text-[10px] font-bold uppercase tracking-widest">Menunggu data masuk...</p>
                             </div>
                         ) : (
-                            recentAttendees.map((att, idx) => (
+                            recentAttendees.map((att: any, idx: number) => (
                                 <div key={idx} className="animate-in slide-in-from-top-2 p-4 bg-white rounded-2xl shadow-sm border border-slate-50 flex items-center gap-4">
                                     <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-xl flex items-center justify-center font-extrabold text-xs shadow-md shadow-indigo-100">
                                         {att.mahasiswa?.nama_lengkap?.charAt(0).toUpperCase()}
