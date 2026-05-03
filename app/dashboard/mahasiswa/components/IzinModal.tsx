@@ -164,8 +164,8 @@ export default function IzinModal({ isOpen, onClose, schedules, studentId }: Izi
               {/* Kategori */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-1">Kategori</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['Sakit', 'Izin', 'Tugas'].map((item) => (
+                <div className="grid grid-cols-2 gap-3">
+                  {['Sakit', 'Izin'].map((item) => (
                     <button
                       key={item}
                       type="button"

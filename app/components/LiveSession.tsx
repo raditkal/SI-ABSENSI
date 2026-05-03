@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaArrowLeft, FaWifi, FaBolt, FaQrcode, FaPowerOff } from "react-icons/fa";
 import { supabase } from '../../lib/supabase';
-export default function LiveSession({ course, onBack, initialIsPresenting = false }: { course: any, onBack: () => void, initialIsPresenting?: boolean }) {
+export default function LiveSession({ course, onBack, initialIsPresenting = false, initialPertemuanKe = 1 }: { course: any, onBack: () => void, initialIsPresenting?: boolean, initialPertemuanKe?: number }) {
     const router = useRouter();
     const [isPresenting, setIsPresenting] = useState(initialIsPresenting);
-    const [pertemuanKe, setPertemuanKe] = useState(1);
+    const [pertemuanKe, setPertemuanKe] = useState(initialPertemuanKe);
     const [isEnding, setIsEnding] = useState(false);
     
     // Local State
@@ -38,6 +38,8 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
                     mahasiswa (nim, nama_lengkap)
                 `)
                 .eq('id_jadwal', course.id)
+                .eq('pertemuan_ke', pertemuanKe)
+                .in('status', ['Hadir'])
                 .order('waktu_absen', { ascending: false });
 
             if (!error && data) {
@@ -58,7 +60,7 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         return () => {
             clearInterval(intervalId);
         };
-    }, [isPresenting, course?.id]);
+    }, [isPresenting, course?.id, pertemuanKe]);
 
     // Efek untuk mengaktifkan status 'is_live' di database saat sesi dimulai
     useEffect(() => {
@@ -104,17 +106,23 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         // 3. Cari yang tidak hadir
         const absentStudents = (allStudents || []).filter(s => !presentIds.has(s.id));
 
-        // 4. Masukkan data Alfa
+        // 4. Masukkan data Alpa
         if (absentStudents.length > 0) {
             const alfaRecords = absentStudents.map(s => ({
                 id_jadwal: course.id,
                 id_mahasiswa: s.id,
-                status: 'Alfa',
+                status: 'Alpa',
                 pertemuan_ke: pertemuanKe,
                 waktu_absen: new Date().toISOString()
             }));
 
-            await supabase.from('absensi').insert(alfaRecords);
+            const { error: alfaError } = await supabase.from('absensi').upsert(alfaRecords, { onConflict: 'id_jadwal, id_mahasiswa, pertemuan_ke' });
+            if (alfaError) {
+                console.error("Gagal insert Alfa:", alfaError);
+                alert("Gagal memproses Alfa otomatis. Cek console.");
+            } else {
+                console.log(`Berhasil insert ${alfaRecords.length} data Alfa.`);
+            }
         }
 
         // 5. Matikan sesi
@@ -172,11 +180,11 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
                                 </div>
                                 <button 
                                     onClick={() => {
-                                        // Jika belum di halaman khusus, pindah ke halaman khusus
+                                        // Jika belum di halaman khusus, pindah ke halaman khusus (BUKA DI TAB BARU)
                                         if (window.location.pathname.includes('/sesi/')) {
                                             setIsPresenting(true);
                                         } else {
-                                            router.push(`/dashboard/dosen/sesi/${course.id}`);
+                                            window.open(`/dashboard/dosen/sesi/${course.id}?p=${pertemuanKe}`, '_blank');
                                         }
                                     }} 
                                     className="bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold px-12 py-5 flex items-center justify-center mx-auto rounded-2xl uppercase tracking-[0.2em] text-xs hover:shadow-lg transition-all"

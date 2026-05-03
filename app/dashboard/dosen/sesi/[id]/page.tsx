@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import LiveSession from '../../../../components/LiveSession';
 import { supabase } from '../../../../../lib/supabase';
 import { FaArrowLeft } from "react-icons/fa";
@@ -8,6 +8,10 @@ import { FaArrowLeft } from "react-icons/fa";
 export default function SesiPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const p = searchParams.get('p');
+    const initialPertemuanKe = p ? parseInt(p) : 1;
+    
     const id = params.id as string;
     const [course, setCourse] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +73,7 @@ export default function SesiPage() {
                     course={course} 
                     onBack={() => router.push('/dashboard/dosen')} 
                     initialIsPresenting={true}
+                    initialPertemuanKe={initialPertemuanKe}
                 />
             </div>
         </div>

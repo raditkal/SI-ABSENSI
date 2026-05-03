@@ -10,6 +10,8 @@ interface IzinRequest {
   alasan: string;
   bukti_url: string;
   status: 'pending' | 'approved' | 'rejected';
+  id_mahasiswa: string;
+  id_jadwal: string;
   mahasiswa: {
     nama_lengkap: string;
     nim: string;
@@ -53,21 +55,53 @@ export default function IzinTab({ dosenId }: { dosenId: string }) {
     setIsLoading(false);
   };
 
-  const handleResponse = async (requestId: string, newStatus: 'approved' | 'rejected') => {
+  const handleResponse = async (req: IzinRequest, newStatus: 'approved' | 'rejected') => {
     try {
+      let pertemuanKe = 1;
+      
+      // Jika disetujui, minta input pertemuan ke berapa
+      if (newStatus === 'approved') {
+        const promptResult = window.prompt(`Masukkan permohonan izin ini untuk pertemuan ke-berapa?\n(Mahasiswa: ${req.mahasiswa.nama_lengkap})`, "1");
+        
+        // Jika dosen menekan "Cancel" pada prompt, batalkan proses
+        if (promptResult === null) return;
+        
+        pertemuanKe = parseInt(promptResult);
+        if (isNaN(pertemuanKe) || pertemuanKe < 1) {
+          alert('Angka pertemuan tidak valid!');
+          return;
+        }
+      }
+
+      // 1. Update status di tabel permohonan_izin
       const { error } = await supabase
         .from('permohonan_izin')
         .update({ status: newStatus })
-        .eq('id', requestId);
+        .eq('id', req.id);
 
       if (error) throw error;
 
-      // Update local state
-      setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: newStatus } : r));
-      
-      // Jika Approved, Anda bisa menambahkan logika otomatis mengisi tabel 'absensi' di sini.
-      // Namun untuk sementara kita fokus pada status permohonannya.
+      // 2. Jika disetujui, otomatis masukkan ke tabel absensi
+      if (newStatus === 'approved') {
+        const { error: absensiError } = await supabase
+          .from('absensi')
+          .upsert({
+            id_jadwal: req.id_jadwal,
+            id_mahasiswa: req.id_mahasiswa,
+            status: req.kategori, // 'Izin' atau 'Sakit' (diambil dari form)
+            pertemuan_ke: pertemuanKe,
+            waktu_absen: new Date().toISOString()
+          }, { onConflict: 'id_jadwal, id_mahasiswa, pertemuan_ke' });
 
+        if (absensiError) {
+          console.error('Gagal memasukkan ke tabel absensi:', absensiError);
+          alert('Status permohonan disetujui, tapi gagal merekam ke absensi otomatis.');
+        }
+      }
+
+      // 3. Update local state
+      setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: newStatus } : r));
+      
     } catch (error) {
       console.error('Error update status izin:', error);
       alert('Gagal memperbarui status.');
@@ -131,14 +165,14 @@ export default function IzinTab({ dosenId }: { dosenId: string }) {
                 {req.status === 'pending' ? (
                   <div className="flex items-center gap-2 border-l border-slate-100 pl-3">
                     <button 
-                      onClick={() => handleResponse(req.id, 'rejected')}
+                      onClick={() => handleResponse(req, 'rejected')}
                       className="p-3 text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
                       title="Tolak"
                     >
                       <IoCloseCircle size={24} />
                     </button>
                     <button 
-                      onClick={() => handleResponse(req.id, 'approved')}
+                      onClick={() => handleResponse(req, 'approved')}
                       className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100"
                     >
                       SETUJUI

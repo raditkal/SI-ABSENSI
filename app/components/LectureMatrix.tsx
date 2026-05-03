@@ -81,8 +81,8 @@ export default function LectureMatrix({ students, courseName, courseId }: { stud
                                         
                                         let code = '-';
                                         if (statusStr === 'hadir') code = 'H';
-                                        else if (statusStr === 'izin') code = 'I';
-                                        else if (statusStr === 'alpa') code = 'A';
+                                        else if (statusStr === 'izin' || statusStr === 'sakit') code = 'I';
+                                        else if (statusStr === 'alpa' || statusStr === 'alfa') code = 'A';
 
                                         if (code === 'H') hadirCount++;
 
