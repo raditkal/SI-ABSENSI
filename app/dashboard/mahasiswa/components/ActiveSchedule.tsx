@@ -11,6 +11,7 @@ interface ActiveScheduleProps {
     jam_selesai: string;
     ruangan: string;
     is_live: boolean;
+    pertemuan_sekarang?: number;
   };
   studentInfo?: {
     id: string;
@@ -36,15 +37,14 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
       const checkLiveStatus = async () => {
           const { data, error } = await supabase
               .from('jadwal')
-              .select('is_live')
+              .select('is_live, pertemuan_sekarang')
               .eq('id', initialSchedule.id)
               .single();
 
           if (!error && data) {
               setSchedule(prev => {
-                  // Hanya update state jika statusnya benar-benar berubah untuk menghindari re-render yang tidak perlu
-                  if (prev && prev.is_live !== data.is_live) {
-                      return { ...prev, is_live: data.is_live };
+                  if (prev && (prev.is_live !== data.is_live || prev.pertemuan_sekarang !== data.pertemuan_sekarang)) {
+                      return { ...prev, is_live: data.is_live, pertemuan_sekarang: data.pertemuan_sekarang };
                   }
                   return prev;
               });
@@ -91,7 +91,7 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
           const { error } = await supabase.from('absensi').insert({
               id_jadwal: schedule.id,
               id_mahasiswa: studentInfo.id,
-              pertemuan_ke: 1, // Idealnya ini dinamis
+              pertemuan_ke: schedule.pertemuan_sekarang || 1, // Menggunakan data dinamis dari dosen
               status: 'Hadir',
               waktu_absen: new Date().toISOString()
           });

@@ -7,6 +7,8 @@ import { supabase } from '../../lib/supabase';
 export default function LiveSession({ course, onBack, initialIsPresenting = false }: { course: any, onBack: () => void, initialIsPresenting?: boolean }) {
     const router = useRouter();
     const [isPresenting, setIsPresenting] = useState(initialIsPresenting);
+    const [pertemuanKe, setPertemuanKe] = useState(1);
+    const [isEnding, setIsEnding] = useState(false);
     
     // Local State
     const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
@@ -62,9 +64,14 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
     useEffect(() => {
         const updateLiveStatus = async (status: boolean) => {
             if (!course?.id) return;
+            const updateData: any = { is_live: status };
+            if (status) {
+                updateData.pertemuan_sekarang = pertemuanKe;
+            }
+            
             await supabase
                 .from('jadwal')
-                .update({ is_live: status })
+                .update(updateData)
                 .eq('id', course.id);
         };
 
@@ -76,15 +83,47 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         return () => {
             updateLiveStatus(false);
         };
-    }, [isPresenting, course?.id]);
+    }, [isPresenting, course?.id, pertemuanKe]);
 
     const handleEndSession = async () => {
-        if (course?.id) {
-            await supabase
-                .from('jadwal')
-                .update({ is_live: false })
-                .eq('id', course.id);
+        if (!course?.id) return;
+        setIsEnding(true);
+
+        // 1. Ambil semua mahasiswa
+        const { data: allStudents } = await supabase.from('mahasiswa').select('id');
+        
+        // 2. Ambil ID mahasiswa yang sudah absen di sesi ini (Hadir/Izin/Sakit)
+        const { data: presentStudents } = await supabase
+            .from('absensi')
+            .select('id_mahasiswa')
+            .eq('id_jadwal', course.id)
+            .eq('pertemuan_ke', pertemuanKe);
+
+        const presentIds = new Set(presentStudents?.map(s => s.id_mahasiswa) || []);
+        
+        // 3. Cari yang tidak hadir
+        const absentStudents = (allStudents || []).filter(s => !presentIds.has(s.id));
+
+        // 4. Masukkan data Alfa
+        if (absentStudents.length > 0) {
+            const alfaRecords = absentStudents.map(s => ({
+                id_jadwal: course.id,
+                id_mahasiswa: s.id,
+                status: 'Alfa',
+                pertemuan_ke: pertemuanKe,
+                waktu_absen: new Date().toISOString()
+            }));
+
+            await supabase.from('absensi').insert(alfaRecords);
         }
+
+        // 5. Matikan sesi
+        await supabase
+            .from('jadwal')
+            .update({ is_live: false })
+            .eq('id', course.id);
+            
+        setIsEnding(false);
         onBack();
     };
 
@@ -117,8 +156,19 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
                                     <FaWifi />
                                 </div>
                                 <h4 className="text-4xl font-extrabold text-slate-800 tracking-tighter uppercase mb-2">{course.name}</h4>
-                                <div className="flex justify-center gap-3 mb-10">
+                                <div className="flex justify-center gap-3 mb-8">
                                     <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-widest">{course.room}</span>
+                                </div>
+                                <div className="max-w-xs mx-auto mb-8 text-left bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 ml-2">Pilih Pertemuan Ke-berapa?</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="16"
+                                        value={pertemuanKe} 
+                                        onChange={(e) => setPertemuanKe(Number(e.target.value))}
+                                        className="w-full bg-white px-6 py-4 rounded-2xl text-xl font-black text-slate-700 outline-none focus:ring-4 ring-indigo-500/20 transition-all text-center border-2 border-transparent focus:border-indigo-500" 
+                                    />
                                 </div>
                                 <button 
                                     onClick={() => {
@@ -153,8 +203,12 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
                                             ></div>
                                         </div>
                                     </div>
-                                    <button onClick={handleEndSession} className="w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-2 border-red-50 text-red-500 font-extrabold uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 hover:border-red-100 transition-all">
-                                        <FaPowerOff /> Akhiri Sesi Kelas
+                                    <button 
+                                        onClick={handleEndSession} 
+                                        disabled={isEnding}
+                                        className="w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-2 border-red-50 text-red-500 font-extrabold uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 hover:border-red-100 transition-all disabled:opacity-50"
+                                    >
+                                        {isEnding ? <><i className="fas fa-circle-notch animate-spin"></i> Memproses Data Alfa...</> : <><FaPowerOff /> Akhiri Sesi Kelas</>}
                                     </button>
                                 </div>
                             </div>
