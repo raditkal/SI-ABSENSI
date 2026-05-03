@@ -11,7 +11,7 @@ import IzinTab from './components/IzinTab';
 import { supabase } from '../../../lib/supabase';
 
 export default function DosenDashboard() {
-    const [view, setView] = useState<'main' | 'history'>('main');
+    const [view, setView] = useState<'main' | 'live' | 'history'>('main');
     const [activeCourse, setActiveCourse] = useState<Course | null>(null);
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'today'|'all'|'upcoming'|'perizinan'>('today');
@@ -161,7 +161,8 @@ export default function DosenDashboard() {
         }
         */
 
-        router.push(`/dashboard/dosen/sesi/${course.id}`);
+        setActiveCourse(course);
+        setView('live');
     };
 
     const handleRescheduleSubmit = async () => {
@@ -248,6 +249,12 @@ export default function DosenDashboard() {
             <div className="fixed top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-600 to-purple-600 z-[200]"></div>
 
             <Navbar dosenName={dosenProfile?.nama_lengkap} />
+            
+            {view === 'live' && (
+                <main className="p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <LiveSession course={activeCourse} onBack={() => setView('main')} />
+                </main>
+            )}
             
             {view === 'history' && (
                 <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">

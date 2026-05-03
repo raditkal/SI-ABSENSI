@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaArrowLeft, FaWifi, FaBolt, FaQrcode, FaPowerOff } from "react-icons/fa";
 import { supabase } from '../../lib/supabase';
 
-export default function LiveSession({ course, onBack }: { course: any, onBack: () => void }) {
-    const [isPresenting, setIsPresenting] = useState(false);
+export default function LiveSession({ course, onBack, initialIsPresenting = false }: { course: any, onBack: () => void, initialIsPresenting?: boolean }) {
+    const router = useRouter();
+    const [isPresenting, setIsPresenting] = useState(initialIsPresenting);
     const [attendanceCount, setAttendanceCount] = useState(0);
     const [totalStudents, setTotalStudents] = useState(0);
     const [recentAttendees, setRecentAttendees] = useState<any[]>([]);
@@ -128,7 +130,17 @@ export default function LiveSession({ course, onBack }: { course: any, onBack: (
                                 <div className="flex justify-center gap-3 mb-10">
                                     <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-widest">{course.room}</span>
                                 </div>
-                                <button onClick={() => setIsPresenting(true)} className="bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold px-12 py-5 flex items-center justify-center mx-auto rounded-2xl uppercase tracking-[0.2em] text-xs hover:shadow-lg transition-all">
+                                <button 
+                                    onClick={() => {
+                                        // Jika belum di halaman khusus, pindah ke halaman khusus
+                                        if (window.location.pathname.includes('/sesi/')) {
+                                            setIsPresenting(true);
+                                        } else {
+                                            router.push(`/dashboard/dosen/sesi/${course.id}`);
+                                        }
+                                    }} 
+                                    className="bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-extrabold px-12 py-5 flex items-center justify-center mx-auto rounded-2xl uppercase tracking-[0.2em] text-xs hover:shadow-lg transition-all"
+                                >
                                     <FaQrcode className="mr-3" /> Buat QR Akses Presensi
                                 </button>
                             </div>

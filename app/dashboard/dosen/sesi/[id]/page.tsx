@@ -68,6 +68,7 @@ export default function SesiPage() {
                 <LiveSession 
                     course={course} 
                     onBack={() => router.push('/dashboard/dosen')} 
+                    initialIsPresenting={true}
                 />
             </div>
         </div>
