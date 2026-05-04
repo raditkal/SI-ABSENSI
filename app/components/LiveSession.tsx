@@ -15,16 +15,25 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
     const [attendanceCount, setAttendanceCount] = useState(0);
     const [totalStudents, setTotalStudents] = useState(0);
 
-    // Ambil total mahasiswa (cukup sekali)
+    // Ambil total mahasiswa di kelas ini
     useEffect(() => {
         const fetchTotalStudents = async () => {
-            const { count } = await supabase
+            if (!course?.class) return;
+            
+            let query = supabase
                 .from('mahasiswa')
                 .select('*', { count: 'exact', head: true });
+            
+            // Filter berdasarkan kelas jika bukan REGULER (atau sesuaikan dengan logic filter kamu)
+            if (course.class && course.class !== 'REGULER') {
+                query = query.eq('kelas', course.class);
+            }
+
+            const { count } = await query;
             setTotalStudents(count || 0);
         };
         fetchTotalStudents();
-    }, []);
+    }, [course?.class]);
 
     // POLLING: Tarik data otomatis setiap 3 detik
     useEffect(() => {
@@ -91,8 +100,14 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
         if (!course?.id) return;
         setIsEnding(true);
 
-        // 1. Ambil semua mahasiswa
-        const { data: allStudents } = await supabase.from('mahasiswa').select('id');
+        // 1. Ambil semua mahasiswa di KELAS YANG SAMA dengan jadwal ini
+        let studentQuery = supabase.from('mahasiswa').select('id');
+        
+        if (course?.class && course.class !== 'REGULER') {
+            studentQuery = studentQuery.eq('kelas', course.class);
+        }
+        
+        const { data: allStudents } = await studentQuery;
         
         // 2. Ambil ID mahasiswa yang sudah absen di sesi ini (Hadir/Izin/Sakit)
         const { data: presentStudents } = await supabase

@@ -31,6 +31,7 @@ export default function SesiPage() {
                     room: data.ruangan,
                     time: `${data.jam_mulai} - ${data.jam_selesai}`,
                     day: data.hari,
+                    class: data.kelas || 'REGULER'
                 });
             }
             setIsLoading(false);

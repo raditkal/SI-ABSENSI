@@ -60,11 +60,11 @@ export default function DosenDashboard() {
               // 3. Fetch Mahasiswa (semua)
               const { data: mhsData } = await supabase
                   .from('mahasiswa')
-                  .select('id, nim, nama_lengkap')
+                  .select('id, nim, nama_lengkap, kelas')
                   .order('nim', { ascending: true });
               
               if (mhsData) {
-                  setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap })));
+                  setStudents(mhsData.map(m => ({ id: m.id, nim: m.nim, nama: m.nama_lengkap, kelas: m.kelas })));
               }
 
               // 4. Fetch Jadwal (Hanya untuk Dosen yang sedang login)
@@ -277,7 +277,15 @@ export default function DosenDashboard() {
                         </div>
                     </div>
 
-                    <LectureMatrix students={students} courseName={activeCourse?.name || ""} courseId={activeCourse?.id.toString() || ""} />
+                    <LectureMatrix 
+                        students={students.filter(s => {
+                            const courseClass = activeCourse?.class?.toString().trim().toUpperCase() || 'REGULER';
+                            const studentClass = s.kelas?.toString().trim().toUpperCase() || 'REGULER';
+                            return courseClass === 'REGULER' || studentClass === courseClass;
+                        })} 
+                        courseName={activeCourse?.name || ""} 
+                        courseId={activeCourse?.id.toString() || ""} 
+                    />
                 </main>
             )}
 
