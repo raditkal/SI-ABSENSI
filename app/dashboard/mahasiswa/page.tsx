@@ -138,7 +138,33 @@ export default function MahasiswaDashboard() {
     fetchDashboardData();
   }, []);
 
-  // Interval Checker: Mengecek jadwal mana yang aktif setiap 30 detik
+  // POLLING: Update status is_live untuk semua jadwal hari ini setiap 5 detik
+  useEffect(() => {
+    if (todaySchedules.length === 0) return;
+
+    const updateLiveStatuses = async () => {
+      const ids = todaySchedules.map(j => j.id);
+      const { data, error } = await supabase
+        .from('jadwal')
+        .select('id, is_live, pertemuan_sekarang')
+        .in('id', ids);
+
+      if (!error && data) {
+        setTodaySchedules(prev => prev.map(j => {
+          const match = data.find(d => d.id === j.id);
+          if (match) {
+            return { ...j, is_live: match.is_live, pertemuan_sekarang: match.pertemuan_sekarang };
+          }
+          return j;
+        }));
+      }
+    };
+
+    const intervalId = setInterval(updateLiveStatuses, 5000);
+    return () => clearInterval(intervalId);
+  }, [todaySchedules.length]); // Re-run only if length changes (initial load)
+
+  // Interval Checker: Mengecek jadwal mana yang aktif setiap 2 detik (lebih responsif)
   useEffect(() => {
       const checkActiveSchedule = () => {
           if (todaySchedules.length === 0) {
@@ -149,23 +175,27 @@ export default function MahasiswaDashboard() {
           const now = new Date();
           const timeNow = now.getHours() * 60 + now.getMinutes();
 
-          const active = todaySchedules.find(j => {
-              const [h1, m1] = j.jam_mulai.split(':').map(Number);
-              const [h2, m2] = j.jam_selesai.split(':').map(Number);
-              const start = h1 * 60 + m1;
-              const end = h2 * 60 + m2;
-              return timeNow >= start && timeNow <= end;
-          });
+          // PRIORITAS:
+          // 1. Cari yang sedang LIVE (is_live: true) - Abaikan jam
+          // 2. Jika tidak ada yang LIVE, cari yang sesuai jam sekarang
+          
+          let active = todaySchedules.find(j => j.is_live);
+          
+          if (!active) {
+              active = todaySchedules.find(j => {
+                  const [h1, m1] = j.jam_mulai.split(':').map(Number);
+                  const [h2, m2] = j.jam_selesai.split(':').map(Number);
+                  const start = h1 * 60 + m1;
+                  const end = h2 * 60 + m2;
+                  return timeNow >= start && timeNow <= end;
+              });
+          }
 
           setActiveJadwal(active || null);
       };
 
-      // Cek langsung saat effect berjalan
       checkActiveSchedule();
-
-      // Set interval 30 detik
-      const intervalId = setInterval(checkActiveSchedule, 30000);
-
+      const intervalId = setInterval(checkActiveSchedule, 2000);
       return () => clearInterval(intervalId);
   }, [todaySchedules]);
 
