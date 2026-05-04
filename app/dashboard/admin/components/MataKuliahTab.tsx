@@ -12,6 +12,7 @@ interface JadwalData {
     jam_mulai: string;
     jam_selesai: string;
     ruangan: string;
+    kelas: string;
     id_matakuliah: string;
     id_dosen: string;
     matakuliah: {
@@ -60,14 +61,14 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
 
     const [isAddJadwalModalOpen, setIsAddJadwalModalOpen] = useState(false);
     const [editingJadwal, setEditingJadwal] = useState<any>(null);
-    const [newJadwal, setNewJadwal] = useState({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '' });
+    const [newJadwal, setNewJadwal] = useState({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '', kelas: 'L1' });
 
     const fetchJadwal = async () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('jadwal')
             .select(`
-                id, hari, jam_mulai, jam_selesai, ruangan, id_matakuliah, id_dosen,
+                id, hari, jam_mulai, jam_selesai, ruangan, id_matakuliah, id_dosen, kelas,
                 matakuliah(nama_mk), dosen(nama_lengkap)
             `)
             .eq('hari', activeHari);
@@ -115,7 +116,8 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
             hari: j.hari,
             jam_mulai: j.jam_mulai.slice(0, 5),
             jam_selesai: j.jam_selesai.slice(0, 5),
-            ruangan: j.ruangan
+            ruangan: j.ruangan,
+            kelas: j.kelas || 'L1'
         });
         fetchMk();
         setIsAddJadwalModalOpen(true);
@@ -151,7 +153,7 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
             alert(editingJadwal ? 'Jadwal berhasil diupdate!' : 'Jadwal berhasil ditambahkan!');
             setIsAddJadwalModalOpen(false);
             setEditingJadwal(null);
-            setNewJadwal({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '' });
+            setNewJadwal({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '', kelas: 'L1' });
             fetchJadwal();
         }
     };
@@ -176,7 +178,10 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                 <div className="mt-6 space-y-4">
                     <div className="flex items-center justify-between text-[10px] font-black text-slate-500">
                         <span className="flex items-center"><FaClock className="mr-2 text-indigo-400" /> {j.jam_mulai.slice(0, 5)} - {j.jam_selesai.slice(0, 5)}</span>
-                        <span className="flex items-center"><FaMapMarkerAlt className="mr-2 text-red-400" /> {j.ruangan}</span>
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center"><FaMapMarkerAlt className="mr-2 text-red-400" /> {j.ruangan}</span>
+                            <span className="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-md uppercase tracking-widest">{j.kelas || 'L1'}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -356,13 +361,23 @@ export default function MataKuliahTab({ setCurrentTab }: MataKuliahTabProps) {
                                     <input required type="time" value={newJadwal.jam_selesai} onChange={e => setNewJadwal({ ...newJadwal, jam_selesai: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" />
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Ruangan</p>
-                                <input required type="text" value={newJadwal.ruangan} onChange={e => setNewJadwal({ ...newJadwal, ruangan: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" placeholder="Contoh: D301" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Ruangan</p>
+                                    <input required type="text" value={newJadwal.ruangan} onChange={e => setNewJadwal({ ...newJadwal, ruangan: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm" placeholder="Contoh: D301" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
+                                    <select value={newJadwal.kelas} onChange={e => setNewJadwal({ ...newJadwal, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 text-sm">
+                                        <option value="L1">L1</option>
+                                        <option value="L2">L2</option>
+                                        <option value="L3">L3</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <button type="button" onClick={() => { setIsAddJadwalModalOpen(false); setEditingJadwal(null); setNewJadwal({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '' }); }} disabled={isSubmitting} className="py-5 bg-slate-200 text-slate-600 font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-300">Batal</button>
+                            <button type="button" onClick={() => { setIsAddJadwalModalOpen(false); setEditingJadwal(null); setNewJadwal({ id_matakuliah: '', id_dosen: '', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', ruangan: '', kelas: 'L1' }); }} disabled={isSubmitting} className="py-5 bg-slate-200 text-slate-600 font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-300">Batal</button>
                             <button type="submit" disabled={isSubmitting} className="py-5 bg-indigo-600 text-white font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:shadow-lg">Simpan</button>
                         </div>
                     </form>

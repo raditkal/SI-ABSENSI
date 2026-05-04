@@ -5,7 +5,6 @@ interface ProfileHeaderProps {
   studentInfo?: {
     nama_lengkap: string;
     kelas: string;
-    angkatan: number;
     nim: string;
   };
 }

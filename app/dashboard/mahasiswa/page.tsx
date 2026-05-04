@@ -37,6 +37,8 @@ export default function MahasiswaDashboard() {
       }
       */
 
+      let currentKelas = null;
+
       // 2. Fetch Mahasiswa Info berdasarkan user_id
       if (user) {
         const { data: mahasiswa } = await supabase
@@ -47,6 +49,7 @@ export default function MahasiswaDashboard() {
           
         if (mahasiswa) {
           setStudentInfo(mahasiswa);
+          currentKelas = mahasiswa.kelas;
           const studentId = mahasiswa.id;
 
           // 3. Fetch Matakuliah List and Associated Absensi
@@ -86,7 +89,7 @@ export default function MahasiswaDashboard() {
       const todayYMD = `${year}-${month}-${day}`;
 
       // Ambil semua jadwal yang mungkin relevan (hari ini asli atau hari ini reschedule)
-      const { data: allPotential } = await supabase
+      let query = supabase
         .from('jadwal')
         .select(`
             id,
@@ -98,9 +101,15 @@ export default function MahasiswaDashboard() {
             reschedule_date,
             reschedule_jam_mulai,
             reschedule_jam_selesai,
-            is_live
-        `)
-        .or(`hari.eq.${todayName},reschedule_date.eq.${todayYMD}`);
+            is_live,
+            kelas
+        `);
+
+      if (currentKelas) {
+          query = query.eq('kelas', currentKelas);
+      }
+
+      const { data: allPotential } = await query.or(`hari.eq.${todayName},reschedule_date.eq.${todayYMD}`);
 
       if (allPotential) {
         const filtered = allPotential.filter(j => {

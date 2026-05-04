@@ -79,7 +79,8 @@ export default function DosenDashboard() {
                     matakuliah(nama_mk, sks),
                     reschedule_date,
                     reschedule_jam_mulai,
-                    reschedule_jam_selesai
+                    reschedule_jam_selesai,
+                    kelas
                 `)
                   .eq('id_dosen', dosen.id);
 
@@ -118,7 +119,7 @@ export default function DosenDashboard() {
                     return {
                         id: j.id,
                         name: (j.matakuliah as any)?.nama_mk || 'Matkul',
-                        class: 'REGULER',
+                        class: j.kelas || 'REGULER',
                         sks: sksValue,
                         room: j.ruangan,
                         time: `${finalStart.slice(0,5)} - ${finalEnd.slice(0,5)}`,

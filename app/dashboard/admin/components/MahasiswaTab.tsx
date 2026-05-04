@@ -11,7 +11,6 @@ interface MahasiswaData {
     nim: string;
     nama_lengkap: string;
     kelas: string;
-    angkatan: number;
 }
 
 export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
@@ -73,7 +72,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newMhs, setNewMhs] = useState({
         password: '',
-        nim: '', nama_lengkap: '', kelas: 'L1', angkatan: new Date().getFullYear()
+        nim: '', nama_lengkap: '', kelas: 'L1'
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,8 +92,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                     profileData: {
                         nim: newMhs.nim,
                         nama_lengkap: newMhs.nama_lengkap,
-                        kelas: newMhs.kelas,
-                        angkatan: newMhs.angkatan
+                        kelas: newMhs.kelas
                     }
                 })
             });
@@ -106,7 +104,7 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
             }
 
             setIsAddModalOpen(false);
-            setNewMhs({ password: '', nim: '', nama_lengkap: '', kelas: activeClass, angkatan: new Date().getFullYear() });
+            setNewMhs({ password: '', nim: '', nama_lengkap: '', kelas: activeClass });
 
             // Trigger re-fetch
             const { data: mhsData } = await supabase.from('mahasiswa').select('*').eq('kelas', activeClass);
@@ -182,19 +180,13 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nama Lengkap</p>
                                         <input required type="text" value={newMhs.nama_lengkap} onChange={e => setNewMhs({ ...newMhs, nama_lengkap: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" placeholder="Nama Mahasiswa" />
                                     </div>
-                                    <div className="flex gap-3">
-                                        <div className="flex-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
-                                            <select value={newMhs.kelas} onChange={e => setNewMhs({ ...newMhs, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none text-sm">
-                                                <option value="L1">L1</option>
-                                                <option value="L2">L2</option>
-                                                <option value="L3">L3</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Angkatan</p>
-                                            <input required type="number" value={newMhs.angkatan} onChange={e => setNewMhs({ ...newMhs, angkatan: Number(e.target.value) })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all text-sm" />
-                                        </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
+                                        <select value={newMhs.kelas} onChange={e => setNewMhs({ ...newMhs, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none transition-all appearance-none text-sm">
+                                            <option value="L1">L1</option>
+                                            <option value="L2">L2</option>
+                                            <option value="L3">L3</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
