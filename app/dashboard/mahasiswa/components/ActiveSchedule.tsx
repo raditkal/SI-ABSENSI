@@ -80,8 +80,52 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
           const kampusLng = parseFloat(config?.kampus_lng || '104.65087595204481');
           const maxRadius = config?.radius_meter || 500;
 
-          // 2. Fase Verifikasi Lokasi (DINONAKTIFKAN UNTUK TESTING)
-          const distanceCheck = { valid: true, message: "Bypass GPS aktif (Testing Mode)" };
+          // 2. Fase Verifikasi Lokasi
+          const checkDistance = async (kLat: number, kLng: number, maxR: number): Promise<{valid: boolean, message: string}> => {
+              return new Promise((resolve) => {
+                  if (!navigator.geolocation) {
+                      resolve({ valid: false, message: "Browser tidak mendukung fitur GPS" });
+                      return;
+                  }
+          
+                  navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                          const userLat = position.coords.latitude;
+                          const userLng = position.coords.longitude;
+                          
+                          // Haversine formula
+                          const R = 6371e3; // radius bumi dalam meter
+                          const φ1 = kLat * Math.PI/180;
+                          const φ2 = userLat * Math.PI/180;
+                          const Δφ = (userLat - kLat) * Math.PI/180;
+                          const Δλ = (userLng - kLng) * Math.PI/180;
+          
+                          const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                                    Math.cos(φ1) * Math.cos(φ2) *
+                                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          
+                          const d = R * c; // Jarak dalam meter
+          
+                          if (d <= maxR) {
+                              resolve({ valid: true, message: "Lokasi valid" });
+                          } else {
+                              resolve({ valid: false, message: `Anda berada di luar jangkauan kampus (Jarak: ${Math.round(d)}m, Maks: ${maxR}m)` });
+                          }
+                      },
+                      (error) => {
+                          let msg = "Gagal mengambil lokasi GPS.";
+                          if (error.code === 1) msg = "Akses GPS ditolak. Tolong izinkan akses lokasi di browser Anda.";
+                          else if (error.code === 2) msg = "Sinyal GPS tidak ditemukan atau lokasi tidak tersedia.";
+                          else if (error.code === 3) msg = "Waktu pengambilan GPS habis (Timeout).";
+                          resolve({ valid: false, message: msg });
+                      },
+                      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                  );
+              });
+          };
+
+          const distanceCheck = await checkDistance(kampusLat, kampusLng, maxRadius);
 
           if (!distanceCheck.valid) {
               throw new Error(distanceCheck.message);
