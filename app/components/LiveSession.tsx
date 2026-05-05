@@ -98,6 +98,13 @@ export default function LiveSession({ course, onBack, initialIsPresenting = fals
 
     const handleEndSession = async () => {
         if (!course?.id) return;
+        
+        // Jika belum masuk ke mode presentasi (QR Code), jangan proses Alfa, cukup kembali
+        if (!isPresenting) {
+            onBack();
+            return;
+        }
+
         setIsEnding(true);
 
         // 1. Ambil semua mahasiswa di KELAS YANG SAMA dengan jadwal ini

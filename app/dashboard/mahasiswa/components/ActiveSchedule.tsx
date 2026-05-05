@@ -64,6 +64,29 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
       };
   }, [initialSchedule?.id]);
 
+  // Cek apakah mahasiswa sudah absen untuk sesi & pertemuan ini
+  React.useEffect(() => {
+    const checkAttendance = async () => {
+      if (!schedule?.id || !studentInfo?.id || !schedule?.pertemuan_sekarang) return;
+
+      const { data } = await supabase
+        .from('absensi')
+        .select('status')
+        .eq('id_jadwal', schedule.id)
+        .eq('id_mahasiswa', studentInfo.id)
+        .eq('pertemuan_ke', schedule.pertemuan_sekarang)
+        .maybeSingle();
+
+      if (data?.status === 'Hadir') {
+        setSuccess(true);
+      } else {
+        setSuccess(false);
+      }
+    };
+
+    checkAttendance();
+  }, [schedule?.id, studentInfo?.id, schedule?.pertemuan_sekarang]);
+
   const handleScan = async () => {
       if (!schedule || !studentInfo) return;
       if (!schedule.is_live) {
@@ -87,21 +110,19 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
               throw new Error(distanceCheck.message);
           }
 
-          // 2. Fase Validasi & Insert Data ke Supabase
-          const { error } = await supabase.from('absensi').insert({
+          // 2. Fase Validasi & Insert Data ke Supabase (Menggunakan UPSERT agar menimpa status Alpa)
+          const { error } = await supabase.from('absensi').upsert({
               id_jadwal: schedule.id,
               id_mahasiswa: studentInfo.id,
-              pertemuan_ke: schedule.pertemuan_sekarang || 1, // Menggunakan data dinamis dari dosen
+              pertemuan_ke: schedule.pertemuan_sekarang || 1,
               status: 'Hadir',
               waktu_absen: new Date().toISOString()
+          }, { 
+              onConflict: 'id_jadwal, id_mahasiswa, pertemuan_ke' 
           });
 
           if (error) {
-              if (error.code === '23505') {
-                  setSuccess(true);
-              } else {
-                  throw new Error(error.message);
-              }
+              throw new Error(error.message);
           } else {
               setSuccess(true);
           }
