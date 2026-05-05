@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { FaQrcode, FaCheckCircle } from "react-icons/fa";
 import { supabase } from '../../../../lib/supabase';
+import QRScanner from './QRScanner';
 
 interface ActiveScheduleProps {
   schedule?: {
@@ -24,6 +25,7 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
   const [isScanning, setIsScanning] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   // Update local state if prop changes
   React.useEffect(() => {
@@ -87,30 +89,39 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
     checkAttendance();
   }, [schedule?.id, studentInfo?.id, schedule?.pertemuan_sekarang]);
 
-  const handleScan = async () => {
+  const handleQRResult = async (decodedText: string) => {
+      setShowScanner(false); // Tutup kamera
+
       if (!schedule || !studentInfo) return;
       if (!schedule.is_live) {
           setErrorMsg("Sesi belum dibuka oleh dosen.");
           return;
       }
+
+      // 1. Verifikasi QR Code
+      if (decodedText !== `SESSION-${schedule.id}`) {
+          setErrorMsg("QR Code tidak valid atau berasal dari kelas yang salah.");
+          return;
+      }
+
       setIsScanning(true);
       setErrorMsg('');
 
       try {
-          // 1. Fetch Setting Radius & Koordinat Kampus dari Supabase
+          // 2. Fetch Setting Radius & Koordinat Kampus dari Supabase
           const { data: config } = await supabase.from('settings').select('*').eq('id', 1).single();
           const kampusLat = parseFloat(config?.kampus_lat || '-3.218552693892837');
           const kampusLng = parseFloat(config?.kampus_lng || '104.65087595204481');
           const maxRadius = config?.radius_meter || 500;
 
-          // 2. Fase Verifikasi Lokasi (DINONAKTIFKAN UNTUK TESTING)
+          // 3. Fase Verifikasi Lokasi (DINONAKTIFKAN UNTUK TESTING)
           const distanceCheck = { valid: true, message: "Bypass GPS aktif (Testing Mode)" };
 
           if (!distanceCheck.valid) {
               throw new Error(distanceCheck.message);
           }
 
-          // 2. Fase Validasi & Insert Data ke Supabase (Menggunakan UPSERT agar menimpa status Alpa)
+          // 4. Fase Validasi & Insert Data ke Supabase (Menggunakan UPSERT agar menimpa status Alpa)
           const { error } = await supabase.from('absensi').upsert({
               id_jadwal: schedule.id,
               id_mahasiswa: studentInfo.id,
@@ -173,20 +184,27 @@ export default function ActiveSchedule({ schedule: initialSchedule, studentInfo 
                 </div>
             ) : (
                 <button 
-                    onClick={handleScan}
+                    onClick={() => setShowScanner(true)}
                     disabled={isScanning}
                     className="bg-white text-indigo-600 px-10 py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:scale-105 transition-all flex items-center gap-3 disabled:opacity-80 disabled:hover:scale-100"
                 >
                     {isScanning ? (
                         <><i className="fas fa-circle-notch animate-spin text-lg"></i> Memindai...</>
                     ) : (
-                        <><FaQrcode className="text-lg" /> Scan Sekarang</>
+                        <><FaQrcode className="text-lg" /> Buka Kamera</>
                     )}
                 </button>
             )}
           </div>
         </div>
       </div>
+
+      {showScanner && (
+        <QRScanner 
+          onScan={handleQRResult}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   );
 }
