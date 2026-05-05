@@ -102,6 +102,7 @@ export default function MahasiswaDashboard() {
             reschedule_jam_mulai,
             reschedule_jam_selesai,
             is_live,
+            pertemuan_sekarang,
             kelas
         `);
 
