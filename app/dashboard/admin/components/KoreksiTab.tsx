@@ -45,7 +45,7 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
             .from('absensi')
             .select(`
                 id, status, waktu_absen, pertemuan_ke,
-                mahasiswa (id, nama_lengkap, nim)
+                mahasiswa (id, nama_lengkap, nim, kelas)
             `)
             .eq('id_jadwal', selectedJadwal)
             .order('waktu_absen', { ascending: false });
@@ -147,6 +147,7 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                     <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest italic border-b border-slate-100">
                                         <tr>
                                             <th className="p-5 rounded-tl-2xl">Mahasiswa</th>
+                                            <th className="p-5">Kelas</th>
                                             <th className="p-5">Waktu</th>
                                             <th className="p-5">Pertemuan Ke</th>
                                             <th className="p-5 rounded-tr-2xl">Aksi Koreksi (Ubah Status)</th>
@@ -158,6 +159,11 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                                 <td className="p-5">
                                                     <div className="font-black text-slate-800 uppercase text-sm">{absensi.mahasiswa?.nama_lengkap}</div>
                                                     <div className="text-[10px] font-bold text-slate-400 tracking-widest mt-1">{absensi.mahasiswa?.nim}</div>
+                                                </td>
+                                                <td className="p-5">
+                                                    <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                                        {absensi.mahasiswa?.kelas || '-'}
+                                                    </span>
                                                 </td>
                                                 <td className="p-5 text-xs font-bold text-slate-500">
                                                     {new Date(absensi.waktu_absen).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
@@ -176,7 +182,7 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                                         >
                                                             <option value="Hadir">HADIR</option>
                                                             <option value="Izin">IZIN</option>
-                                                            <option value="Alfa">ALFA</option>
+                                                            <option value="Alpa">ALPA</option>
                                                         </select>
                                                         {savingId === absensi.id && <i className="fas fa-circle-notch animate-spin text-indigo-500"></i>}
                                                     </div>
@@ -248,7 +254,7 @@ export default function KoreksiTab({ setCurrentTab }: KoreksiTabProps) {
                                     >
                                         <option value="Hadir">Hadir</option>
                                         <option value="Izin">Izin (Surat Resmi)</option>
-                                        <option value="Alfa">Alfa</option>
+                                        <option value="Alpa">Alpa</option>
                                     </select>
                                 </div>
                                 <div>

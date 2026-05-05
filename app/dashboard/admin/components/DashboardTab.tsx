@@ -13,6 +13,7 @@ interface DashboardTabProps {
 export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
     const [totalMhs, setTotalMhs] = useState<number>(0);
     const [totalDosen, setTotalDosen] = useState<number>(0);
+    const [attendanceStats, setAttendanceStats] = useState({ L1: 0, L2: 0, L3: 0, average: 0 });
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -28,6 +29,29 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
 
             if (mhsCount !== null) setTotalMhs(mhsCount);
             if (dosenCount !== null) setTotalDosen(dosenCount);
+
+            // Fetch Attendance Stats per Class
+            const fetchClassStats = async (kelas: string) => {
+                const { count: total } = await supabase
+                    .from('absensi')
+                    .select('*, mahasiswa!inner(kelas)', { count: 'exact', head: true })
+                    .eq('mahasiswa.kelas', kelas);
+                
+                const { count: hadir } = await supabase
+                    .from('absensi')
+                    .select('*, mahasiswa!inner(kelas)', { count: 'exact', head: true })
+                    .eq('mahasiswa.kelas', kelas)
+                    .in('status', ['Hadir', 'Izin', 'Sakit']); // Anggap Izin/Sakit sebagai "Hadir" dalam persentase absensi, atau sesuaikan
+
+                return total && total > 0 ? Math.round((hadir || 0) / total * 100) : 0;
+            };
+
+            const l1 = await fetchClassStats('L1');
+            const l2 = await fetchClassStats('L2');
+            const l3 = await fetchClassStats('L3');
+            const avg = Math.round((l1 + l2 + l3) / 3);
+
+            setAttendanceStats({ L1: l1, L2: l2, L3: l3, average: avg });
         };
 
         fetchCounts();
@@ -45,7 +69,7 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                                 data={{
                                     labels: ['L1', 'L2', 'L3'],
                                     datasets: [{ 
-                                        data: [95, 88, 92], 
+                                        data: [attendanceStats.L1, attendanceStats.L2, attendanceStats.L3], 
                                         backgroundColor: ['#6366f1', '#f59e0b', '#10b981'], 
                                         borderWidth: 0, 
                                         hoverOffset: 15,
@@ -56,22 +80,22 @@ export default function DashboardTab({ setCurrentTab }: DashboardTabProps) {
                             />
                         </div>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-4xl font-black text-slate-800">91%</span>
+                            <span className="text-4xl font-black text-slate-800">{attendanceStats.average}%</span>
                             <span className="text-[9px] font-bold text-slate-400 uppercase">Average</span>
                         </div>
                     </div>
                     <div className="w-full mt-8 grid grid-cols-3 gap-2">
                         <div className="text-center p-3 bg-indigo-50 rounded-2xl">
                             <p className="text-[9px] font-black text-indigo-400 uppercase">L1</p>
-                            <p className="text-sm font-extrabold text-indigo-600">95%</p>
+                            <p className="text-sm font-extrabold text-indigo-600">{attendanceStats.L1}%</p>
                         </div>
                         <div className="text-center p-3 bg-orange-50 rounded-2xl">
                             <p className="text-[9px] font-black text-orange-400 uppercase">L2</p>
-                            <p className="text-sm font-extrabold text-orange-600">88%</p>
+                            <p className="text-sm font-extrabold text-orange-600">{attendanceStats.L2}%</p>
                         </div>
                         <div className="text-center p-3 bg-emerald-50 rounded-2xl">
                             <p className="text-[9px] font-black text-emerald-400 uppercase">L3</p>
-                            <p className="text-sm font-extrabold text-emerald-600">92%</p>
+                            <p className="text-sm font-extrabold text-emerald-600">{attendanceStats.L3}%</p>
                         </div>
                     </div>
                 </div>

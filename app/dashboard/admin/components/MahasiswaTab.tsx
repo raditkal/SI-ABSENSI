@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaArrowLeft, FaUserPlus } from "react-icons/fa";
+import { FaArrowLeft, FaUserPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { supabase } from '../../../../lib/supabase'; // Import koneksi supabase
 
 interface MahasiswaTabProps {
@@ -17,22 +17,24 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
     const [activeClass, setActiveClass] = useState('L1');
     const [mahasiswaList, setMahasiswaList] = useState<MahasiswaData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingMhs, setEditingMhs] = useState<MahasiswaData | null>(null);
 
     // Ambil data dari tabel "mahasiswa" Supabase
+    const fetchMahasiswa = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('mahasiswa')
+            .select('*')
+            .eq('kelas', activeClass);
+
+        if (!error && data) {
+            setMahasiswaList(data);
+        }
+        setIsLoading(false);
+    };
+
     useEffect(() => {
-        const fetchMahasiswa = async () => {
-            setIsLoading(true);
-            const { data, error } = await supabase
-                .from('mahasiswa')
-                .select('*')
-                .eq('kelas', activeClass);
-
-            if (!error && data) {
-                setMahasiswaList(data);
-            }
-            setIsLoading(false);
-        };
-
         fetchMahasiswa();
     }, [activeClass]);
 
@@ -59,7 +61,23 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
         }
 
         return mahasiswaList.map((mhs, i) => (
-            <div key={mhs.id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex flex-col items-center group hover:bg-white hover:border-indigo-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
+            <div key={mhs.id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex flex-col items-center group hover:bg-white hover:border-indigo-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 relative">
+                <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                    <button 
+                        onClick={() => { setEditingMhs(mhs); setIsEditModalOpen(true); }}
+                        className="w-8 h-8 bg-white text-amber-500 rounded-full shadow-md flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all"
+                        title="Edit Data"
+                    >
+                        <FaEdit className="text-[10px]" />
+                    </button>
+                    <button 
+                        onClick={() => handleDeleteStudent(mhs.id, mhs.nama_lengkap)}
+                        className="w-8 h-8 bg-white text-rose-500 rounded-full shadow-md flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"
+                        title="Hapus Mahasiswa"
+                    >
+                        <FaTrash className="text-[10px]" />
+                    </button>
+                </div>
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-lg mb-4 shadow-lg shadow-indigo-200">
                     {mhs.nama_lengkap.charAt(0).toUpperCase()}
                 </div>
@@ -105,16 +123,59 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
 
             setIsAddModalOpen(false);
             setNewMhs({ password: '', nim: '', nama_lengkap: '', kelas: activeClass });
-
-            // Trigger re-fetch
-            const { data: mhsData } = await supabase.from('mahasiswa').select('*').eq('kelas', activeClass);
-            if (mhsData) setMahasiswaList(mhsData);
+            fetchMahasiswa();
 
             alert(`Sukses! Akun Mahasiswa berhasil dibuat.\nEmail Login: ${autoEmail}`);
         } catch (err: any) {
             alert('Gagal menambahkan mahasiswa: ' + err.message);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleUpdateStudent = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingMhs) return;
+        setIsSubmitting(true);
+
+        try {
+            const { error } = await supabase
+                .from('mahasiswa')
+                .update({
+                    nim: editingMhs.nim,
+                    nama_lengkap: editingMhs.nama_lengkap,
+                    kelas: editingMhs.kelas
+                })
+                .eq('id', editingMhs.id);
+
+            if (error) throw error;
+
+            setIsEditModalOpen(false);
+            setEditingMhs(null);
+            fetchMahasiswa();
+            alert('Data Mahasiswa berhasil diperbarui!');
+        } catch (err: any) {
+            alert('Gagal update data: ' + err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteStudent = async (id: string, nama: string) => {
+        if (!confirm(`Apakah Anda yakin ingin menghapus mahasiswa "${nama}"?\nSeluruh data presensi mahasiswa ini juga akan terhapus.`)) return;
+
+        try {
+            const { error } = await supabase
+                .from('mahasiswa')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            fetchMahasiswa();
+            alert('Mahasiswa berhasil dihapus dari database.');
+        } catch (err: any) {
+            alert('Gagal menghapus data: ' + err.message);
         }
     };
 
@@ -156,6 +217,46 @@ export default function MahasiswaTab({ setCurrentTab }: MahasiswaTabProps) {
                 </div>
             </div>
 
+            {/* Edit Modal */}
+            {isEditModalOpen && editingMhs && (
+                <div className="fixed inset-0 bg-slate-900/40 z-[300] flex items-center justify-center p-4 backdrop-blur-md">
+                    <form onSubmit={handleUpdateStudent} className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-[3rem] p-10 shadow-2xl border border-white">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
+                                <FaEdit className="text-2xl" />
+                            </div>
+                            <h3 className="text-2xl font-extrabold text-slate-800 uppercase tracking-tighter">Edit Data</h3>
+                            <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Perbarui informasi mahasiswa</p>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">NIM (Tidak dapat diubah)</p>
+                                <input readOnly type="text" value={editingMhs.nim} className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-500 outline-none text-sm cursor-not-allowed" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nama Lengkap</p>
+                                <input required type="text" value={editingMhs.nama_lengkap} onChange={e => setEditingMhs({ ...editingMhs, nama_lengkap: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Kelas</p>
+                                <select value={editingMhs.kelas} onChange={e => setEditingMhs({ ...editingMhs, kelas: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 ring-indigo-500 outline-none text-sm">
+                                    <option value="L1">L1</option>
+                                    <option value="L2">L2</option>
+                                    <option value="L3">L3</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button type="button" onClick={() => setIsEditModalOpen(false)} className="py-5 bg-slate-200 text-slate-600 font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-300">Batal</button>
+                            <button type="submit" disabled={isSubmitting} className="py-5 bg-indigo-600 text-white font-extrabold rounded-2xl uppercase text-[10px] tracking-widest hover:shadow-lg">
+                                {isSubmitting ? <i className="fas fa-circle-notch animate-spin"></i> : "Simpan"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
             {/* Add Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 z-[300] flex items-center justify-center p-4 backdrop-blur-md">
