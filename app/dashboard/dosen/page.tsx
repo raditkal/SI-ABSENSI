@@ -269,12 +269,6 @@ export default function DosenDashboard() {
                                 <span className="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-md uppercase tracking-widest">{activeCourse?.sks} SKS</span>
                             </div>
                         </div>
-                        <div className="flex gap-4">
-                            <div className="glass px-6 py-3 rounded-2xl flex items-center gap-3 border-l-4 border-l-emerald-500 shadow-sm">
-                                <p className="text-[9px] font-black text-slate-400 uppercase">Avg Presence</p>
-                                <p className="text-xl font-extrabold text-slate-700">94.2%</p>
-                            </div>
-                        </div>
                     </div>
 
                     <LectureMatrix 
